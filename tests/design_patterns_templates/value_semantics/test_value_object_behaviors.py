@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from lammps_trajectory_analysis_tools.design_patterns_templates.value_semantics import (
+from lammps_trajectory_analysis_workspaces.design_patterns_templates.value_semantics import (
     ConcreteStateImplementation,
     NumericStateImplementation,
     StateValueObjectImmutable,

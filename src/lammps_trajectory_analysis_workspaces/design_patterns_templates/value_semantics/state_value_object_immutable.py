@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any, Self
 
-from lammps_trajectory_analysis_tools.design_patterns_templates.value_semantics.protocols import (
+from lammps_trajectory_analysis_workspaces.design_patterns_templates.value_semantics.protocols import (
     StateValueBehaviorProtocol,
 )
-from lammps_trajectory_analysis_tools.design_patterns_templates.value_semantics.value_object_interface import (
+from lammps_trajectory_analysis_workspaces.design_patterns_templates.value_semantics.value_object_interface import (
     ValueObjectInterface,
 )
 

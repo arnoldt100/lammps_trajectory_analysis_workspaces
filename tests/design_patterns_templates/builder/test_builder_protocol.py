@@ -1,4 +1,4 @@
-from lammps_trajectory_analysis_tools.design_patterns_templates.builder import SupportsBuild
+from lammps_trajectory_analysis_workspaces.design_patterns_templates.builder import SupportsBuild
 
 
 class Product:

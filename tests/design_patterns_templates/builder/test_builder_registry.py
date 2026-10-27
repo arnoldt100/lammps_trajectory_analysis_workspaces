@@ -1,6 +1,6 @@
 import pytest
 
-from lammps_trajectory_analysis_tools.design_patterns_templates.builder import (
+from lammps_trajectory_analysis_workspaces.design_patterns_templates.builder import (
     BuilderKeyError,
     BuilderRegistrationError,
     BuilderRegistry,

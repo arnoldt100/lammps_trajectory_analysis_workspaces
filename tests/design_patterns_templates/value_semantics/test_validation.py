@@ -1,6 +1,6 @@
 import pytest
 
-from lammps_trajectory_analysis_tools.design_patterns_templates.value_semantics.validation import (
+from lammps_trajectory_analysis_workspaces.design_patterns_templates.value_semantics.validation import (
     ValueValidationError,
     validate_state,
 )
