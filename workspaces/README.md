@@ -38,4 +38,4 @@ This keeps operational context scoped to one feature folder.
 
 | Feature | Workspace | Owned production code | Owned tests | Status |
 |---|---|---|---|---|
-|   |   |   |   |   |
+| Command line | [features/command_line_workspaces/](features/command_line_workspaces/README.md) | CLI entry point, task subcommands, and dispatch | Centralized CLI contract and orchestration tests | Planning |
