@@ -1,12 +1,22 @@
-#! /usr/bin/env python3
+"""Create and process the command-line parser."""
 
-""" This module creates the parser for the command line arguments
+import argparse
+from collections.abc import Sequence
 
-This module's responsibility is to create the top level parser and the subparsers
-for this project. Each analysis tool has a corresponding subparser and a  
-corresponding subcommand.
+from lammps_trajectory_analysis_workspaces.cli_args import CLIArgs
 
-We use a factory or builder pattern where each subparser/subcommand has a 
-concrete builder that adds the appropriates options, help messages, etc. 
 
-"""
+def process_command_line_arguments(
+    argv: Sequence[str] | None = None,
+) -> CLIArgs:
+    """Parse command-line arguments and return them in a ``CLIArgs`` object.
+
+    The top-level parser currently supports only argparse's built-in help
+    options. Task subcommands and their arguments will be added as tasks are
+    defined.
+    """
+    parser = argparse.ArgumentParser(
+        description="Analyze LAMMPS simulation output and generate plots."
+    )
+    parsed_arguments = parser.parse_args(argv)
+    return CLIArgs(parsed_arguments=parsed_arguments)
