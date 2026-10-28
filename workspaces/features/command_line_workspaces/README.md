@@ -19,15 +19,23 @@ parser.
 
 ## Structural Boundaries
 
-The feature owns the CLI entry point, top-level parser, per-task subcommand
-builders, and the CLI-level propagation of validated values to the task
-implementation. Production code belongs under
-`src/lammps_trajectory_analysis_workspaces/`. Tests belong under `tests/` and
-cover the CLI contract, dispatch, and pipeline orchestration boundaries.
+The CLI entry point is
+[`scripts/lammps_trajectory_analysis_workspaces.py`](../../../scripts/lammps_trajectory_analysis_workspaces.py).
+It invokes `main()` to drive analysis tasks and animation-plot generation.
+Shared parser construction is in
+[`src/lammps_trajectory_analysis_workspaces/ltaw_workspace_parser.py`](../../../src/lammps_trajectory_analysis_workspaces/ltaw_workspace_parser.py);
+this module owns the top-level parser and subcommands, while task-specific
+subcommand builders and CLI-level propagation of validated values belong in
+the package as those tasks are established. Task implementations retain
+domain-specific simulation parsing, conversion, and output generation.
 
-Exact source and test file paths are to be recorded here when implementation
-structure is established. This workspace contains plans and status
-documentation only; production code and tests do not belong in this folder.
+Tests belong under `tests/` and cover the CLI contract, dispatch, and pipeline
+orchestration boundaries. The script and parser module are currently
+scaffolds; task-specific subcommands, dispatch, and tests remain to be
+implemented.
+
+This workspace contains plans and status documentation only; production code
+and tests do not belong in this folder.
 
 ## External Dependencies
 

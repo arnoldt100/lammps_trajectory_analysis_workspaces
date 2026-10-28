@@ -8,6 +8,10 @@ file whenever the feature's behavior, data flow, or boundaries change.
 ### Done
 
 - The intended task workflow and three-stage pipeline are documented.
+- Entry-point scaffold added at
+  `scripts/lammps_trajectory_analysis_workspaces.py`.
+- Shared parser scaffold added at
+  `src/lammps_trajectory_analysis_workspaces/ltaw_workspace_parser.py`.
 
 ### Pending
 
@@ -23,6 +27,10 @@ file whenever the feature's behavior, data flow, or boundaries change.
 ## Decisions
 
 - Each task has a distinct subcommand.
+- `scripts/lammps_trajectory_analysis_workspaces.py` is the main program
+  entry point for analysis tasks and animation-plot generation.
+- The package parser module owns top-level parser and subcommand construction;
+  task-specific logic stays outside the entry-point script.
 - A task generally consists of selecting LAMMPS simulation output files,
   using MDAnalysis to read them and produce HDF5 data, then converting that
   HDF5 data into VTKHDF files for animation.
@@ -36,6 +44,12 @@ file whenever the feature's behavior, data flow, or boundaries change.
 
 ```text
 user invokes task subcommand
+        │
+        ▼
+scripts/lammps_trajectory_analysis_workspaces.py
+        │
+        ▼
+shared parser and subcommand dispatch
         │
         ├─ parse and validate task-specific arguments
         ▼

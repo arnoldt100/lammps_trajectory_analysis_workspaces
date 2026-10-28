@@ -10,7 +10,10 @@ rules; it must not weaken the project-wide rules.
 Maintain a command-line interface with a top-level parser and a distinct
 subcommand for each simulation-analysis task. Each subcommand validates its
 task-specific arguments and dispatches to the corresponding task
-implementation.
+implementation. The executable entry point is
+`scripts/lammps_trajectory_analysis_workspaces.py`; it invokes the shared
+parser and dispatch flow rather than containing task-specific analysis or
+conversion logic.
 
 A task generally orchestrates this three-stage pipeline:
 
@@ -43,7 +46,7 @@ validated at the command line and again at CLI-class construction.
 - Validate every value consumed by a task both during command-line parsing
   and at CLI-class construction.
 
-## Package Structure
+## Implementation Structure
 
 Feature workspace (plan, boundaries, and status only — no code):
 
@@ -54,11 +57,26 @@ workspaces/features/command_line_workspaces/
   top_level_plan.md
 ```
 
-The planned production boundary is the CLI entry point, top-level parser,
-per-task subcommand builders, and CLI-level orchestration/dispatch under
-`src/lammps_trajectory_analysis_workspaces/`. Tests are centralized under
-`tests/`. Record exact file paths here and in the feature README when the
-implementation structure is established.
+The current CLI scaffold and intended production boundary are:
+
+```text
+scripts/
+  lammps_trajectory_analysis_workspaces.py  # executable entry point and main()
+src/
+  lammps_trajectory_analysis_workspaces/
+    ltaw_workspace_parser.py                # top-level parser and subcommands
+    <task-specific CLI modules>              # parsing, validation, dispatch
+tests/
+  <CLI contract and orchestration tests>
+```
+
+The script is the user-facing program entry point. Shared parser construction,
+per-task subcommand builders, and CLI-level orchestration/dispatch belong in
+the package; task-specific LAMMPS, MDAnalysis, HDF5, and VTKHDF work remains
+with task implementations. The script and parser module currently establish
+the entry-point and parser boundaries; task subcommands, dispatch, and tests
+remain pending. Record concrete task-module and test paths as they are
+established.
 
 ## Test Plan
 
