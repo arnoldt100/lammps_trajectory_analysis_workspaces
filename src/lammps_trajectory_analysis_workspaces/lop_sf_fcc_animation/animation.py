@@ -3,6 +3,14 @@
 from argparse import Namespace
 from pathlib import Path
 
+from lammps_trajectory_analysis_tools.lib.lop_sf_fcc_vtkhdf_writer import (
+    HDF5LopSfFccAnimationSourceBuilderKey,
+    LopSfFccVtkhdfAnimationConverter,
+    LopSfFccVtkhdfAnimationConverterBuilderKey,
+    LopSfFccVtkhdfAnimationSourceInterface,
+    lop_sf_fcc_vtkhdf_animation_writer_factory,
+)
+
 
 class LopSfFccAnimation:
     """Represent conversion of an HDF5 trajectory to a VTKHDF animation."""
@@ -43,12 +51,26 @@ class LopSfFccAnimation:
         self._write_vtkhdf_file()
 
     def _read_hdf5_file(self) -> None:
-        """Read the input HDF5 trajectory."""
-        print(f"Reading HDF5 trajectory from: {self._input_file}")
+        """Validate and stream the input trajectory through LTAT's reader."""
+        source: LopSfFccVtkhdfAnimationSourceInterface = (
+            lop_sf_fcc_vtkhdf_animation_writer_factory.build(
+                HDF5LopSfFccAnimationSourceBuilderKey,
+                file_path=self._input_file,
+            )
+        )
+        with source:
+            # Decoding validates each frame without retaining the trajectory.
+            for _ in source.frames():
+                pass
 
     def _write_vtkhdf_file(self) -> None:
-        """Write the VTKHDF animation."""
-        print(f"Writing VTKHDF animation to: {self._output_vtkhdf_file}")
+        """Write the animation through LTAT's builder-backed converter."""
+        converter: LopSfFccVtkhdfAnimationConverter = (
+            lop_sf_fcc_vtkhdf_animation_writer_factory.build(
+                LopSfFccVtkhdfAnimationConverterBuilderKey,
+            )
+        )
+        converter.convert_hdf5(self._input_file, self._output_vtkhdf_file)
 
     @staticmethod
     def run_from_cli_args(arguments: Namespace) -> None:

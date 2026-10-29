@@ -10,8 +10,8 @@ rules; it must not weaken the project-wide rules.
 Maintain a command-line interface with a top-level parser and a distinct
 subcommand for each simulation-analysis task. Each subcommand validates its
 task-specific arguments and dispatches to the corresponding task
-implementation. The executable entry point is
-`scripts/lammps_trajectory_analysis_workspaces.py`; it invokes the shared
+implementation. The entry point is
+`scripts/ltaw.py`, invoked through `uv run scripts/ltaw.py`. It uses the shared
 parser and dispatch flow rather than containing task-specific analysis or
 conversion logic.
 
@@ -66,7 +66,7 @@ The current CLI scaffold and intended production boundary are:
 
 ```text
 scripts/
-  lammps_trajectory_analysis_workspaces.py  # executable entry point and main()
+  ltaw.py                                  # script entry point and main()
 src/
   lammps_trajectory_analysis_workspaces/
     ltaw_workspace_parser.py                # top-level parser and registration
@@ -82,8 +82,9 @@ tests/
     test_animation.py
 ```
 
-The script is the user-facing program entry point. Shared parser construction,
-per-task subcommand builders, and CLI-level orchestration/dispatch belong in
+The script owns generic handler dispatch; no console script is declared.
+Shared parser construction,
+and per-task subcommand builders belong in
 the package; task-specific LAMMPS, MDAnalysis, HDF5, and VTKHDF work remains
 with task implementations. The `lop_sf_fcc_animation` subparser binds
 `LopSfFccAnimation.run_from_cli_args` as its `func` handler. The main program
@@ -91,22 +92,31 @@ parses the selected subcommand and invokes `args.func(args)`, with no
 command-name conditional.
 
 The current animation callable validates the input file and path types,
-retains the input and output paths, and prints a placeholder conversion
-message when invoked. The animation work is planned in two phases: first
+retains the input and output paths, and delegates reading to LTAT's
+registered source builder using context-managed full frame iteration.
+Writing now delegates to LTAT's registered converter, which builds its
+writer value object through the registered builder. Generated-file output
+validation and 10-trajectory sample conversion pass. ParaView 6.2.0's
+VTK HDF reader verifies all time steps and frame data for generated and
+sample output; interactive rendering remains unverified. The animation work
+was implemented in two phases: first
 read the HDF5 trajectory through LTAT's existing reader, then write VTKHDF
-through LTAT's existing writer. Phase 1 is the current focus; defer phase 2
-until HDF5 reading and its data contract are verified.
+through LTAT's existing writer. Both phases are complete within the animation
+class boundary. Script-only invocation and existing-regular-file validation
+at both parsing and constructor boundaries are verified.
 
 ## Test Plan
 
 1. The top-level parser exposes registered task subcommands and requires a
    selected subcommand for normal execution; top-level help remains available.
 2. The planned `lop_sf_fcc_animation` invocation is
-   `uv run lammps_trajectory_analysis_workspaces.py lop_sf_fcc_animation INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
+   `uv run scripts/ltaw.py lop_sf_fcc_animation INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
    The input is a required positional `Path`; the output is a required
-   `Path` option. The current parser still uses `--input-file`.
-3. Declare the project console-script entry point needed to make the
-   `uv run lammps_trajectory_analysis_workspaces.py` invocation resolve.
+   `Path` option. Positional parsing is implemented; the former
+   `--input-file` option is rejected.
+3. Implemented: the script runs through `uv run scripts/ltaw.py`.
+   The user chose script-only invocation and the non-conflicting name.
+   Verify successful conversion and exit status from outside the repository.
 4. Each subparser binds its callable handler using `set_defaults(func=...)`;
    the entry point dispatches with `args.func(args)`.
 5. Parsed values are propagated unchanged to the matching task implementation
@@ -138,8 +148,8 @@ until HDF5 reading and its data contract are verified.
 - The CLI contract describes one distinct subcommand per task.
 - The planned command accepts a positional HDF5 input and required VTKHDF
   output option, reads the input trajectory, and writes the requested output.
-- The command is runnable with the documented `uv run` invocation through a
-  declared console-script entry point.
+- The command is runnable with the documented `uv run scripts/ltaw.py`
+  invocation without an installed console-script entry point.
 - The subcommand uses handler-based dispatch.
 - The general task pipeline is documented in order: LAMMPS outputs,
   MDAnalysis-to-HDF5, then HDF5-to-VTKHDF for animation.
@@ -149,5 +159,6 @@ until HDF5 reading and its data contract are verified.
   success-shaped result.
 - Tests cover subcommand discovery, required arguments, handler
   registration, dispatch, and constructor-level invalid input behavior.
-  CLI-side input existence validation and phase-specific HDF5-reading and
-  VTKHDF-writing tests remain pending.
+  Parser-side regular-file checks, post-parse removal, HDF5 reading, and
+  VTKHDF writing are also covered. All 37 selected tests passed after adding
+  parser validation; opt-in sample/ParaView checks were not rerun in that step.

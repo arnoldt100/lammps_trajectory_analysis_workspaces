@@ -28,5 +28,6 @@ def main() -> CLIArgs:
     parsed_arguments.func(parsed_arguments)
     return cli_args
 
+
 if __name__ == "__main__":
     main()

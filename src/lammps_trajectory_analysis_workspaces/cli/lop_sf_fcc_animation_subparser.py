@@ -8,6 +8,15 @@ from lammps_trajectory_analysis_workspaces.lop_sf_fcc_animation import (
 )
 
 
+def _existing_input_file(value: str) -> Path:
+    path = Path(value)
+    if not path.exists():
+        raise argparse.ArgumentTypeError(f"input file does not exist: {path}")
+    if not path.is_file():
+        raise argparse.ArgumentTypeError(f"input file is not a regular file: {path}")
+    return path
+
+
 def add_lop_sf_fcc_animation_subparser(
     subparsers: argparse._SubParsersAction,
 ) -> argparse.ArgumentParser:
@@ -20,10 +29,10 @@ def add_lop_sf_fcc_animation_subparser(
         ),
     )
     parser.add_argument(
-        "--input-file",
-        type=Path,
-        required=True,
-        help="Path to the input HDF5 trajectory file.",
+        "input_file",
+        metavar="INPUT_FILE",
+        type=_existing_input_file,
+        help="Path to an existing regular HDF5 trajectory file.",
     )
     parser.add_argument(
         "--output-vtkhdf-file",
