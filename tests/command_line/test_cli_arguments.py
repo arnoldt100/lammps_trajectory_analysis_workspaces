@@ -314,7 +314,7 @@ def test_console_main_returns_none_after_dispatch(monkeypatch, entry_point):
 
 
 def test_script_uses_shared_dispatch(entry_point):
-    script_path = Path(__file__).parents[2] / "ltaw.py"
+    script_path = Path(__file__).parents[2] / "scripts" / "ltaw.py"
     spec = importlib.util.spec_from_file_location("ltaw_cli_entry_point", script_path)
     assert spec is not None
     assert spec.loader is not None

@@ -19,7 +19,7 @@ animation using that project's `vtkhdf_writer` package.
 ## Public Command Contract
 
 ```text
-uv run ltaw.py \
+uv run scripts/ltaw.py \
   lop_sf_fcc_animation --input-file <input-hdf5-file> \
   --output-vtkhdf-file <output-vtkhdf-file>
 ```
@@ -32,7 +32,7 @@ uv run ltaw.py \
 - The completed command must read the HDF5 LOP-SF-FCC trajectory and write
   the requested VTKHDF animation file, using existing packages in
   `$LTAT_TOP_LEVEL` for both phases.
-- Invoke through `uv run ltaw.py`.
+- Invoke through `uv run scripts/ltaw.py`.
 - The subparser binds `LopSfFccAnimation.run_from_cli_args` with
   `parser.set_defaults(func=...)`.
 - The top-level CLI invokes the selected handler as `args.func(args)`.
@@ -40,7 +40,7 @@ uv run ltaw.py \
 
 The parser requires both path options; positional input is rejected.
 The user chose root-script invocation through
-`ltaw.py`, avoiding the package-name collision. No console script
+`scripts/ltaw.py`, avoiding the package-name collision. No console script
 is declared in `pyproject.toml`.
 
 The input must be an existing regular file during parsing and again at
@@ -71,7 +71,7 @@ tests/
   option definitions, and handler binding.
 - `ltaw_workspace_parser.py` belongs to the shared CLI feature and owns the
   top-level parser and subparser registration.
-- `ltaw.py` owns process entry and
+- `scripts/ltaw.py` owns process entry and
   generic handler invocation, not task-specific branching or conversion.
 - `lop_sf_fcc_animation/animation.py` owns the callable class and
   orchestration of the two external-package phases.
@@ -290,7 +290,7 @@ Continue to pause after each step for review.
 5. The subparser sets `func` to the callable adapter.
 6. Dispatch invokes the handler with the parsed namespace and preserves both
    paths unchanged.
-7. `uv run ltaw.py` runs the CLI without a console-script entry point.
+7. `uv run scripts/ltaw.py` runs the CLI without a console-script entry point.
 8. Invalid input-file values fail through the callable's validation and do
    not produce the placeholder conversion message.
 9. Implemented: parser-side input existence and regular-file checks satisfy
@@ -322,7 +322,7 @@ Continue to pause after each step for review.
   `--output-vtkhdf-file`, both as `Path`. Positional input is
   rejected. All 24 focused CLI and animation unit tests passed at the earlier
   change, covering required arguments, help, parsing, and dispatch.
-- The approved entry point is `ltaw.py`; no console script is declared.
+- The approved entry point is `scripts/ltaw.py`; no console script is declared.
   All 33 selected CLI/animation tests passed, including conversion from
   outside the repository with exit status zero and unchanged source data.
 - Callable handler binding through `set_defaults(func=...)` and generic

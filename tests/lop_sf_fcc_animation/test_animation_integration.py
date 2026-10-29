@@ -338,7 +338,10 @@ def test_cli_converts_trajectory(
     original_digest = sha256(trajectory_file.read_bytes()).digest()
     output = tmp_path / "cli-animation.vtkhdf"
     project_root = Path(__file__).parents[2]
-    command = "ltaw.py" if working_directory == "project" else str(project_root / "ltaw.py")
+    script_path = Path("scripts") / "ltaw.py"
+    command = str(
+        script_path if working_directory == "project" else project_root / script_path
+    )
     result = run(
         [
             "uv", "run", "--project", str(Path(__file__).parents[2]), "--locked",

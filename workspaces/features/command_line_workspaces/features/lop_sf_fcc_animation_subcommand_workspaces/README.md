@@ -6,7 +6,7 @@ Own the parser builder for the `lop_sf_fcc_animation` command. The subcommand
 accepts an existing HDF5 trajectory path and an explicit output VTKHDF path:
 
 ```text
-uv run ltaw.py \
+uv run scripts/ltaw.py \
   lop_sf_fcc_animation --input-file <input-hdf5-file> \
   --output-vtkhdf-file <output-vtkhdf-file>
 ```
@@ -63,7 +63,7 @@ also owns conversion to VTKHDF and is located at
 The local callable should integrate with these packages rather than
 reimplement their functionality.
 
-The invocation is `uv run ltaw.py ...`. The script's non-conflicting
+The invocation is `uv run scripts/ltaw.py ...`. The script's non-conflicting
 name avoids shadowing the package. It delegates to `ltaw_workspace_parser.run`; the user
 requested removal of `cli/main.py` and chose no installed console command.
 Script conversion from outside the repository is tested.

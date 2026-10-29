@@ -20,8 +20,8 @@ parser.
 ## Structural Boundaries
 
 The CLI entry point is
-[`ltaw.py`](../../../ltaw.py), invoked through
-`uv run ltaw.py` from the project root. It delegates to the package's
+[`scripts/ltaw.py`](../../../scripts/ltaw.py), invoked through
+`uv run scripts/ltaw.py` from the project root. It delegates to the package's
 `ltaw_workspace_parser.run`; there is no
 installed console-script entry point.
 It invokes `main()` to drive analysis tasks and animation-plot generation.
@@ -51,7 +51,7 @@ The parser and callable constructor both require an existing regular input file.
 Do not duplicate external reader or writer logic.
 
 The target invocation is
-`uv run ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
+`uv run scripts/ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
 The script was renamed to avoid shadowing the package. The user chose
 script-only invocation rather than an installed console command.
 

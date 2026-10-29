@@ -9,9 +9,9 @@ feature workspace. It mirrors the scoped subparser package under
 
 ### Done
 
-- Current root-level launcher and mandatory path options are verified:
+- Current scripts-directory launcher and mandatory path options are verified:
   all 41 selected tests passed, including conversion using
-  `uv run ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE
+  `uv run scripts/ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE
   --output-vtkhdf-file OUTPUT_FILE`. Sample/ParaView checks were not rerun.
 - Final combined regression after the script rename and parser validation
   passed all 40 focused CLI/animation tests through `uv run --locked`.
@@ -55,7 +55,7 @@ feature workspace. It mirrors the scoped subparser package under
 - Current command contract: the HDF5 input is a required `--input-file` `Path`;
   the VTKHDF output is a required `--output-vtkhdf-file` `Path` option.
 - Both path options are mandatory; positional input is not supported.
-- The entry point is `ltaw.py`, invoked through `uv run`.
+- The entry point is `scripts/ltaw.py`, invoked through `uv run`.
   The user requested the non-conflicting script name, removal of
   `cli/main.py`, and script-only invocation with no installed console command.
 - Generic dispatch lives in `ltaw_workspace_parser.run`; the root script
@@ -223,7 +223,7 @@ phase 2: callable writes VTKHDF through external vtkhdf_writer
 Target user invocation:
 
 ```text
-uv run ltaw.py \
+uv run scripts/ltaw.py \
   lop_sf_fcc_animation --input-file INPUT_FILE \
   --output-vtkhdf-file OUTPUT_VTKHDF_FILE
 ```

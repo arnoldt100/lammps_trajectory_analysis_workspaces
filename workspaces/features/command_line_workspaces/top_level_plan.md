@@ -11,7 +11,7 @@ Maintain a command-line interface with a top-level parser and a distinct
 subcommand for each simulation-analysis task. Each subcommand validates its
 task-specific arguments and dispatches to the corresponding task
 implementation. The entry point is
-`ltaw.py`, invoked through `uv run ltaw.py`. It uses the shared
+`scripts/ltaw.py`, invoked through `uv run scripts/ltaw.py`. It uses the shared
 parser and dispatch flow rather than containing task-specific analysis or
 conversion logic.
 
@@ -65,7 +65,7 @@ workspaces/features/command_line_workspaces/
 The current CLI scaffold and intended production boundary are:
 
 ```text
-ltaw.py                                    # root script entry point
+scripts/ltaw.py                                    # script entry point
 src/
   lammps_trajectory_analysis_workspaces/
     ltaw_workspace_parser.py                # top-level parser and registration
@@ -110,10 +110,10 @@ at both parsing and constructor boundaries are verified.
 1. The top-level parser exposes registered task subcommands and requires a
    selected subcommand for normal execution; top-level help remains available.
 2. The planned `lop_sf_fcc_animation` invocation is
-   `uv run ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
+   `uv run scripts/ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
    Both `--input-file` and `--output-vtkhdf-file` are mandatory `Path`
    options. Positional input is rejected.
-3. Implemented: the script runs through `uv run ltaw.py`.
+3. Implemented: the script runs through `uv run scripts/ltaw.py`.
    The user chose script-only invocation and the non-conflicting name.
    Verify successful conversion and exit status from outside the repository.
 4. Each subparser binds its callable handler using `set_defaults(func=...)`;
@@ -147,7 +147,7 @@ at both parsing and constructor boundaries are verified.
 - The CLI contract describes one distinct subcommand per task.
 - The command accepts mandatory HDF5 input and VTKHDF output options,
   reads the input trajectory, and writes the requested output.
-- The command is runnable with the documented `uv run ltaw.py`
+- The command is runnable with the documented `uv run scripts/ltaw.py`
   invocation without an installed console-script entry point.
 - The subcommand uses handler-based dispatch.
 - The general task pipeline is documented in order: LAMMPS outputs,

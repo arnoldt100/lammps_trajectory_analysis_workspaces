@@ -7,7 +7,7 @@ file whenever the feature's behavior, data flow, or boundaries change.
 
 ### Done
 
-- Current invocation is `uv run ltaw.py lop_sf_fcc_animation --input-file
+- Current invocation is `uv run scripts/ltaw.py lop_sf_fcc_animation --input-file
   INPUT_FILE --output-vtkhdf-file OUTPUT_FILE` from the project root.
   Both options are mandatory. All 41 selected tests passed after this
   change, including exact-invocation conversion and outside-directory
@@ -19,7 +19,7 @@ file whenever the feature's behavior, data flow, or boundaries change.
   input validation, existing-output protection, and write-failure cleanup.
 - The intended task workflow and three-stage pipeline are documented.
 - Entry point implemented at
-  `ltaw.py`.
+  `scripts/ltaw.py`.
 - Shared parser implemented at
   `src/lammps_trajectory_analysis_workspaces/ltaw_workspace_parser.py`.
 - Added `cli_args.py` with the parsed namespace wrapper.
@@ -63,7 +63,7 @@ file whenever the feature's behavior, data flow, or boundaries change.
 ## Decisions
 
 - Each task has a distinct subcommand.
-- The entry point is root-level `ltaw.py`, which delegates to the package's
+- The entry point is `scripts/ltaw.py`, which delegates to the package's
   `ltaw_workspace_parser.run`, preserving its `CLIArgs` return. The user requested
   removal of `cli/main.py`, and chose script-only invocation.
 - The package parser module owns top-level parser and subcommand construction;
@@ -71,7 +71,7 @@ file whenever the feature's behavior, data flow, or boundaries change.
 - `lop_sf_fcc_animation` uses `set_defaults(func=...)` and the main program
   dispatches by invoking the parsed handler with the parsed namespace.
 - Planned invocation:
-  `uv run ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
+  `uv run scripts/ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
 - For the current contract, `--input-file` is mandatory and the command reads
   it as HDF5 LOP-SF-FCC input, then writes the specified VTKHDF output.
 - Implement in two phases: first read the HDF5 trajectory through the
@@ -108,7 +108,7 @@ file whenever the feature's behavior, data flow, or boundaries change.
 user invokes task subcommand
         │
         ▼
-ltaw.py
+scripts/ltaw.py
         │
         ▼
 ltaw_workspace_parser.py
