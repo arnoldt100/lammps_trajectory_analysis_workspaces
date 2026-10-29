@@ -15,7 +15,7 @@ source_root = Path(__file__).resolve().parents[1] / "src"
 if source_root.is_dir():
     sys.path.insert(0, str(source_root))
 
-from lammps_trajectory_analysis_workspaces.cli_args import CLIArgs
+from lammps_trajectory_analysis_workspaces.cli.cli_args import CLIArgs
 from lammps_trajectory_analysis_workspaces.ltaw_workspace_parser import (
     process_command_line_arguments,
 )

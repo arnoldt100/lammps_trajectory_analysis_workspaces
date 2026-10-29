@@ -3,7 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
-from lammps_trajectory_analysis_workspaces.cli_args import CLIArgs
+from lammps_trajectory_analysis_workspaces.cli.cli_args import CLIArgs
 from lammps_trajectory_analysis_workspaces.cli import (
     add_lop_sf_fcc_animation_subparser,
 )

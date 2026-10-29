@@ -69,9 +69,9 @@ scripts/
   lammps_trajectory_analysis_workspaces.py  # executable entry point and main()
 src/
   lammps_trajectory_analysis_workspaces/
-    cli_args.py                             # typed parsed-argument wrapper
     ltaw_workspace_parser.py                # top-level parser and registration
     cli/
+      cli_args.py                           # typed parsed-argument wrapper
       lop_sf_fcc_animation_subparser.py      # task parser and handler binding
     lop_sf_fcc_animation/
       animation.py                           # callable task boundary

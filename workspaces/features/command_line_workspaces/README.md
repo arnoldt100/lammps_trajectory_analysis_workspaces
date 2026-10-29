@@ -28,7 +28,7 @@ it registers the `lop_sf_fcc_animation` subcommand from
 [`src/lammps_trajectory_analysis_workspaces/cli/lop_sf_fcc_animation_subparser.py`](../../../src/lammps_trajectory_analysis_workspaces/cli/lop_sf_fcc_animation_subparser.py).
 That subparser defines required `--input-file` and `--output-vtkhdf-file`
 options and binds the callable handler with `set_defaults(func=...)`.
-[`src/lammps_trajectory_analysis_workspaces/cli_args.py`](../../../src/lammps_trajectory_analysis_workspaces/cli_args.py)
+[`src/lammps_trajectory_analysis_workspaces/cli/cli_args.py`](../../../src/lammps_trajectory_analysis_workspaces/cli/cli_args.py)
 wraps the parsed namespace. The entry point dispatches by invoking
 `args.func(args)` rather than branching on command names.
 

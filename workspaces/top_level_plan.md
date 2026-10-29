@@ -15,3 +15,10 @@ feature plan at
 
 The environmental variable `LTAW_TOP_LEVEL` defines the root directory of
 this Python project.
+
+# Python Environment and Commands
+
+The project's Python virtual environment is located at
+`${LTAW_TOP_LEVEL}/.venv`. Run Python commands and scripts through `uv run`
+so they use the project's managed environment (for example,
+`uv run python scripts/lammps_trajectory_analysis_workspaces.py --help`).
