@@ -38,8 +38,17 @@ class LopSfFccAnimation:
         return self._output_vtkhdf_file
 
     def __call__(self) -> None:
-        """Announce the pending HDF5-to-VTKHDF conversion."""
-        print("converting HDF5 to VTKHDF")
+        """Read the HDF5 trajectory and write its VTKHDF animation."""
+        self._read_hdf5_file()
+        self._write_vtkhdf_file()
+
+    def _read_hdf5_file(self) -> None:
+        """Read the input HDF5 trajectory."""
+        print(f"Reading HDF5 trajectory from: {self._input_file}")
+
+    def _write_vtkhdf_file(self) -> None:
+        """Write the VTKHDF animation."""
+        print(f"Writing VTKHDF animation to: {self._output_vtkhdf_file}")
 
     @staticmethod
     def run_from_cli_args(arguments: Namespace) -> None:

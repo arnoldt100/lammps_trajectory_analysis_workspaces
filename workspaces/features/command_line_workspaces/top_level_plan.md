@@ -92,28 +92,36 @@ command-name conditional.
 
 The current animation callable validates the input file and path types,
 retains the input and output paths, and prints a placeholder conversion
-message when invoked. It does not yet read HDF5 or create VTKHDF output;
-conversion behavior awaits the HDF5 structure specification.
+message when invoked. The animation work is planned in two phases: first
+read the HDF5 trajectory through LTAT's existing reader, then write VTKHDF
+through LTAT's existing writer. Phase 1 is the current focus; defer phase 2
+until HDF5 reading and its data contract are verified.
 
 ## Test Plan
 
 1. The top-level parser exposes registered task subcommands and requires a
    selected subcommand for normal execution; top-level help remains available.
-2. The `lop_sf_fcc_animation` subcommand requires `--input-file` and
-   `--output-vtkhdf-file`, parsing both as `Path`.
-3. Each subparser binds its callable handler using `set_defaults(func=...)`;
+2. The planned `lop_sf_fcc_animation` invocation is
+   `uv run lammps_trajectory_analysis_workspaces.py lop_sf_fcc_animation INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
+   The input is a required positional `Path`; the output is a required
+   `Path` option. The current parser still uses `--input-file`.
+3. Declare the project console-script entry point needed to make the
+   `uv run lammps_trajectory_analysis_workspaces.py` invocation resolve.
+4. Each subparser binds its callable handler using `set_defaults(func=...)`;
    the entry point dispatches with `args.func(args)`.
-4. Parsed values are propagated unchanged to the matching task implementation
+5. Parsed values are propagated unchanged to the matching task implementation
    and validated both during argument processing and at callable-class
    construction. The current animation command still needs CLI-side
    validation that its input path is an existing regular file.
-5. For a task using the general pipeline, verify stage order and explicit
+6. For a task using the general pipeline, verify stage order and explicit
    propagation of LAMMPS inputs to HDF5 conversion and HDF5 output to VTKHDF
    conversion.
-6. A failed stage is surfaced as a CLI failure; later stages are not invoked
+7. A failed stage is surfaced as a CLI failure; later stages are not invoked
    with missing or invalid output.
-7. CLI contract tests do not require production LAMMPS trajectory files when
+8. CLI contract tests do not require production LAMMPS trajectory files when
    stage collaborators can be replaced with controlled test doubles.
+9. Implement the LOP-SF-FCC animation in sequence: complete and verify
+   external HDF5 reading first, then integrate external VTKHDF writing.
 
 ## Non-Goals
 
@@ -128,15 +136,18 @@ conversion behavior awaits the HDF5 structure specification.
 ## Acceptance Criteria
 
 - The CLI contract describes one distinct subcommand per task.
-- The `lop_sf_fcc_animation` command is registered with its two required
-  path options and handler-based dispatch.
+- The planned command accepts a positional HDF5 input and required VTKHDF
+  output option, reads the input trajectory, and writes the requested output.
+- The command is runnable with the documented `uv run` invocation through a
+  declared console-script entry point.
+- The subcommand uses handler-based dispatch.
 - The general task pipeline is documented in order: LAMMPS outputs,
   MDAnalysis-to-HDF5, then HDF5-to-VTKHDF for animation.
 - Task-specific parsing and dispatch remain separate from domain conversion
   implementations.
 - Invalid inputs and stage failures are surfaced rather than producing a
   success-shaped result.
-- Tests cover subcommand discovery, required options, handler registration,
-  dispatch, and constructor-level invalid input behavior. CLI-side input
-  existence validation and HDF5/VTKHDF pipeline ordering/conversion tests
-  remain pending.
+- Tests cover subcommand discovery, required arguments, handler
+  registration, dispatch, and constructor-level invalid input behavior.
+  CLI-side input existence validation and phase-specific HDF5-reading and
+  VTKHDF-writing tests remain pending.

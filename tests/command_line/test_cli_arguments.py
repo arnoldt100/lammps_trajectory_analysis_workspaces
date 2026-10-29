@@ -84,7 +84,10 @@ def test_animation_subcommand_handler_invokes_callable(tmp_path, capsys):
 
     cli_args.parsed_arguments.func(cli_args.parsed_arguments)
 
-    assert capsys.readouterr().out == "converting HDF5 to VTKHDF\n"
+    assert capsys.readouterr().out == (
+        f"Reading HDF5 trajectory from: {input_file}\n"
+        f"Writing VTKHDF animation to: {output_file}\n"
+    )
 
 
 def test_animation_subcommand_handler_surfaces_missing_input(tmp_path, capsys):

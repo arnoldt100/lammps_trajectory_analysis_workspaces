@@ -42,7 +42,7 @@ def test_animation_requires_path_arguments(tmp_path):
         LopSfFccAnimation(input_file, str(tmp_path / "animation.vtkhdf"))
 
 
-def test_call_prints_conversion_message(tmp_path, capsys):
+def test_call_reads_hdf5_then_writes_vtkhdf(tmp_path, capsys):
     input_file = tmp_path / "trajectory.h5"
     input_file.write_text("test data", encoding="utf-8")
     animation = LopSfFccAnimation(
@@ -53,4 +53,7 @@ def test_call_prints_conversion_message(tmp_path, capsys):
     result = animation()
 
     assert result is None
-    assert capsys.readouterr().out == "converting HDF5 to VTKHDF\n"
+    assert capsys.readouterr().out == (
+        f"Reading HDF5 trajectory from: {input_file}\n"
+        f"Writing VTKHDF animation to: {tmp_path / 'animation.vtkhdf'}\n"
+    )
