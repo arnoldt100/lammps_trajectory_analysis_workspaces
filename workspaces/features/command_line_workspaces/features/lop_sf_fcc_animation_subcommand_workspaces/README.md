@@ -6,13 +6,13 @@ Own the parser builder for the `lop_sf_fcc_animation` command. The subcommand
 accepts an existing HDF5 trajectory path and an explicit output VTKHDF path:
 
 ```text
-uv run scripts/ltaw.py \
-  lop_sf_fcc_animation <input-hdf5-file> \
+uv run ltaw.py \
+  lop_sf_fcc_animation --input-file <input-hdf5-file> \
   --output-vtkhdf-file <output-vtkhdf-file>
 ```
 
-Input is positional and the output option is required. The former
-`--input-file` option is no longer accepted. Invocation is script-only;
+Both `--input-file` and `--output-vtkhdf-file` are mandatory.
+Positional input is rejected. Invocation is script-only from the project root;
 no console-script entry point is declared.
 Both argument parsing and callable construction require an existing regular
 input file. Argparse rejects missing files, directories, and broken symlinks;
@@ -63,8 +63,8 @@ also owns conversion to VTKHDF and is located at
 The local callable should integrate with these packages rather than
 reimplement their functionality.
 
-The invocation is `uv run scripts/ltaw.py ...`. The script's non-conflicting
-name avoids shadowing the package. It owns generic dispatch; the user
+The invocation is `uv run ltaw.py ...`. The script's non-conflicting
+name avoids shadowing the package. It delegates to `ltaw_workspace_parser.run`; the user
 requested removal of `cli/main.py` and chose no installed console command.
 Script conversion from outside the repository is tested.
 

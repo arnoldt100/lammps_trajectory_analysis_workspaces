@@ -9,16 +9,20 @@ feature workspace. It mirrors the scoped subparser package under
 
 ### Done
 
+- Current root-level launcher and mandatory path options are verified:
+  all 41 selected tests passed, including conversion using
+  `uv run ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE
+  --output-vtkhdf-file OUTPUT_FILE`. Sample/ParaView checks were not rerun.
 - Final combined regression after the script rename and parser validation
   passed all 40 focused CLI/animation tests through `uv run --locked`.
   Both `LTAW_SAMPLE_HDF5` and `LTAW_PVPYTHON` were enabled, covering the
   sample and ParaView reader checks alongside the current CLI behavior.
 - Added the subparser builder at
   `src/lammps_trajectory_analysis_workspaces/cli/lop_sf_fcc_animation_subparser.py`.
-- Registered the `lop_sf_fcc_animation` command with required positional
-  `INPUT_FILE` and required `--output-vtkhdf-file`, both parsed as
-  `pathlib.Path`. The former `--input-file` option is rejected.
-- Verified positional parsing, missing required arguments, old-option
+- Registered the `lop_sf_fcc_animation` command with mandatory
+  `--input-file` and `--output-vtkhdf-file`, both parsed as
+  `pathlib.Path`. Positional input is rejected.
+- Verified option parsing, missing required arguments, positional-input
   rejection, help output, and unchanged handler/path dispatch.
   All 24 focused CLI and animation unit tests passed via `uv run --locked`.
 - Bound `LopSfFccAnimation.run_from_cli_args` with
@@ -48,14 +52,14 @@ feature workspace. It mirrors the scoped subparser package under
   feature owns the top-level parser and registration; the separate
   `lop_sf_fcc_animation` package owns the callable implementation.
 - The command name is exactly `lop_sf_fcc_animation`.
-- Planned command contract: the HDF5 input is a required positional `Path`;
+- Current command contract: the HDF5 input is a required `--input-file` `Path`;
   the VTKHDF output is a required `--output-vtkhdf-file` `Path` option.
-- Positional input is implemented; no compatibility alias for the former
-  `--input-file` option is retained.
-- The entry point is `scripts/ltaw.py`, invoked through `uv run`.
+- Both path options are mandatory; positional input is not supported.
+- The entry point is `ltaw.py`, invoked through `uv run`.
   The user requested the non-conflicting script name, removal of
   `cli/main.py`, and script-only invocation with no installed console command.
-- Generic dispatch lives in the script and preserves `main()`'s return
+- Generic dispatch lives in `ltaw_workspace_parser.run`; the root script
+  delegates to it and preserves its return
   contract. All 33 selected CLI/animation tests pass, including script
   conversion from outside the repository. Sample/ParaView tests were not
   rerun in this rename step.
@@ -203,7 +207,7 @@ top-level CLI parser
         │
         ▼
 lop_sf_fcc_animation subparser
-        ├─ parse input/output paths (positional input is planned)
+        ├─ parse mandatory input/output path options
         └─ attach LopSfFccAnimation.run_from_cli_args as func
         │
         ▼
@@ -219,8 +223,8 @@ phase 2: callable writes VTKHDF through external vtkhdf_writer
 Target user invocation:
 
 ```text
-uv run scripts/ltaw.py \
-  lop_sf_fcc_animation INPUT_FILE \
+uv run ltaw.py \
+  lop_sf_fcc_animation --input-file INPUT_FILE \
   --output-vtkhdf-file OUTPUT_VTKHDF_FILE
 ```
 

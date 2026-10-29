@@ -41,7 +41,7 @@ successfully instead of returning `CLIArgs`.
 ### 3. Wire the entry point
 
 Update `main()` in
-`scripts/ltaw.py` to call
+`ltaw.py` to call
 `process_command_line_arguments`. No analysis dispatch is added until task
 subcommands exist. Correct the script's malformed shebang as part of making
 the entry point executable.

@@ -331,19 +331,22 @@ def test_conversion_preserves_trajectory_data(
     assert not output.with_name(f"{output.name}.tmp").exists()
 
 
-def test_script_converts_trajectory(
-    trajectory_file: Path, tmp_path: Path,
+@pytest.mark.parametrize("working_directory", ["project", "outside"])
+def test_cli_converts_trajectory(
+    trajectory_file: Path, tmp_path: Path, working_directory: str,
 ):
     original_digest = sha256(trajectory_file.read_bytes()).digest()
     output = tmp_path / "cli-animation.vtkhdf"
+    project_root = Path(__file__).parents[2]
+    command = "ltaw.py" if working_directory == "project" else str(project_root / "ltaw.py")
     result = run(
         [
             "uv", "run", "--project", str(Path(__file__).parents[2]), "--locked",
-            str(Path(__file__).parents[2] / "scripts" / "ltaw.py"),
-            "lop_sf_fcc_animation",
-            str(trajectory_file), "--output-vtkhdf-file", str(output),
+            command, "lop_sf_fcc_animation",
+            "--input-file", str(trajectory_file),
+            "--output-vtkhdf-file", str(output),
         ],
-        cwd=tmp_path,
+        cwd=project_root if working_directory == "project" else tmp_path,
         capture_output=True,
         text=True,
         timeout=120,

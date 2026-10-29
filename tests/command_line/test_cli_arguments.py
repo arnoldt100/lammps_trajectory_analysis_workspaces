@@ -43,6 +43,7 @@ def test_process_command_line_arguments_rejects_unknown_argument(capsys, input_p
         process_command_line_arguments(
             [
                 "lop_sf_fcc_animation",
+                "--input-file",
                 "trajectory.h5",
                 "--output-vtkhdf-file",
                 "animation.vtkhdf",
@@ -58,6 +59,7 @@ def test_process_command_line_arguments_returns_cli_args_with_handler(input_path
     cli_args = process_command_line_arguments(
         [
             "lop_sf_fcc_animation",
+            "--input-file",
             "trajectory.h5",
             "--output-vtkhdf-file",
             "animation.vtkhdf",
@@ -77,8 +79,9 @@ def test_process_command_line_arguments_returns_cli_args_with_handler(input_path
 @pytest.mark.parametrize(
     ("arguments", "missing"),
     [
-        (["--output-vtkhdf-file", "animation.vtkhdf"], "INPUT_FILE"),
-        (["trajectory.h5"], "--output-vtkhdf-file"),
+        (["--output-vtkhdf-file", "animation.vtkhdf"], "--input-file"),
+        (["--input-file", "trajectory.h5"], "--output-vtkhdf-file"),
+        ([], "--input-file"),
     ],
 )
 def test_animation_subcommand_requires_input_and_output(
@@ -91,30 +94,31 @@ def test_animation_subcommand_requires_input_and_output(
     assert missing in capsys.readouterr().err
 
 
-def test_animation_subcommand_rejects_old_input_option(capsys, input_path):
+def test_animation_subcommand_rejects_positional_input(capsys, input_path):
     with pytest.raises(SystemExit) as exc_info:
         process_command_line_arguments(
             [
                 "lop_sf_fcc_animation",
                 "--input-file",
                 "trajectory.h5",
+                "extra.h5",
                 "--output-vtkhdf-file",
                 "animation.vtkhdf",
             ]
         )
 
     assert exc_info.value.code == 2
-    assert "unrecognized arguments: --input-file" in capsys.readouterr().err
+    assert "unrecognized arguments: extra.h5" in capsys.readouterr().err
 
 
-def test_animation_subcommand_help_describes_positional_input(capsys):
+def test_animation_subcommand_help_describes_required_options(capsys):
     with pytest.raises(SystemExit) as exc_info:
         process_command_line_arguments(["lop_sf_fcc_animation", "--help"])
 
     assert exc_info.value.code == 0
     help_text = capsys.readouterr().out
     assert "INPUT_FILE" in help_text
-    assert "--input-file" not in help_text
+    assert "--input-file INPUT_FILE" in help_text
     assert "--output-vtkhdf-file" in help_text
 
 
@@ -141,6 +145,7 @@ def test_animation_subcommand_handler_invokes_callable(tmp_path, capsys, monkeyp
     cli_args = process_command_line_arguments(
         [
             "lop_sf_fcc_animation",
+            "--input-file",
             str(input_file),
             "--output-vtkhdf-file",
             str(output_file),
@@ -176,6 +181,7 @@ def test_animation_subcommand_rejects_invalid_input(
         process_command_line_arguments(
             [
                 "lop_sf_fcc_animation",
+                "--input-file",
                 str(input_file),
                 "--output-vtkhdf-file",
                 str(output),
@@ -194,7 +200,7 @@ def test_animation_subcommand_accepts_symlink_to_regular_file(input_path, tmp_pa
     link = tmp_path / "linked.h5"
     link.symlink_to(input_path)
     cli_args = process_command_line_arguments(
-        ["lop_sf_fcc_animation", str(link),
+        ["lop_sf_fcc_animation", "--input-file", str(link),
          "--output-vtkhdf-file", "animation.vtkhdf"]
     )
 
@@ -205,6 +211,7 @@ def test_animation_subcommand_revalidates_input_at_dispatch(input_path, capsys):
     cli_args = process_command_line_arguments(
         [
             "lop_sf_fcc_animation",
+            "--input-file",
             str(input_path),
             "--output-vtkhdf-file",
             "animation.vtkhdf",
@@ -220,12 +227,8 @@ def test_animation_subcommand_revalidates_input_at_dispatch(input_path, capsys):
 
 @pytest.fixture
 def entry_point():
-    script_path = Path(__file__).parents[2] / "scripts" / "ltaw.py"
-    spec = importlib.util.spec_from_file_location("ltaw_cli_entry_point", script_path)
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    from lammps_trajectory_analysis_workspaces import ltaw_workspace_parser as module
+
     return module
 
 
@@ -248,7 +251,7 @@ def test_main_invokes_parsed_function(monkeypatch, entry_point):
         fake_process_command_line_arguments,
     )
 
-    assert entry_point.main() is expected_cli_args
+    assert entry_point.run() is expected_cli_args
     assert calls == [parsed_arguments]
 
 
@@ -272,6 +275,7 @@ def test_main_dispatches_animation_command_with_parsed_paths(
         [
             "program",
             "lop_sf_fcc_animation",
+            "--input-file",
             str(input_file),
             "--output-vtkhdf-file",
             str(output_file),
@@ -288,9 +292,33 @@ def test_main_dispatches_animation_command_with_parsed_paths(
         staticmethod(fake_handler),
     )
 
-    cli_args = entry_point.main()
+    cli_args = entry_point.run()
 
     assert cli_args.parsed_arguments.command == "lop_sf_fcc_animation"
     assert cli_args.parsed_arguments.input_file == input_file
     assert cli_args.parsed_arguments.output_vtkhdf_file == output_file
     assert calls == [cli_args.parsed_arguments]
+
+
+def test_console_main_returns_none_after_dispatch(monkeypatch, entry_point):
+    calls = []
+
+    def fake_run():
+        calls.append(True)
+        return CLIArgs(parsed_arguments=argparse.Namespace())
+
+    monkeypatch.setattr(entry_point, "run", fake_run)
+
+    assert entry_point.main() is None
+    assert calls == [True]
+
+
+def test_script_uses_shared_dispatch(entry_point):
+    script_path = Path(__file__).parents[2] / "ltaw.py"
+    spec = importlib.util.spec_from_file_location("ltaw_cli_entry_point", script_path)
+    assert spec is not None
+    assert spec.loader is not None
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+
+    assert script.main is entry_point.run

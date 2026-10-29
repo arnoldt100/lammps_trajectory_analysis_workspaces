@@ -26,3 +26,16 @@ def process_command_line_arguments(
 
     parsed_arguments = parser.parse_args(argv)
     return CLIArgs(parsed_arguments=parsed_arguments)
+
+
+def run() -> CLIArgs:
+    """Parse arguments, dispatch the selected command, and return its arguments."""
+    cli_args = process_command_line_arguments()
+    parsed_arguments = cli_args.parsed_arguments
+    parsed_arguments.func(parsed_arguments)
+    return cli_args
+
+
+def main() -> None:
+    """Run the installed CLI with a successful exit status on completion."""
+    run()

@@ -29,9 +29,10 @@ def add_lop_sf_fcc_animation_subparser(
         ),
     )
     parser.add_argument(
-        "input_file",
+        "--input-file",
         metavar="INPUT_FILE",
         type=_existing_input_file,
+        required=True,
         help="Path to an existing regular HDF5 trajectory file.",
     )
     parser.add_argument(

@@ -20,18 +20,18 @@ parser.
 ## Structural Boundaries
 
 The CLI entry point is
-[`scripts/ltaw.py`](../../../scripts/ltaw.py), invoked through
-`uv run scripts/ltaw.py`. It owns generic handler dispatch; there is no
+[`ltaw.py`](../../../ltaw.py), invoked through
+`uv run ltaw.py` from the project root. It delegates to the package's
+`ltaw_workspace_parser.run`; there is no
 installed console-script entry point.
 It invokes `main()` to drive analysis tasks and animation-plot generation.
 Shared parser construction is in
 [`src/lammps_trajectory_analysis_workspaces/ltaw_workspace_parser.py`](../../../src/lammps_trajectory_analysis_workspaces/ltaw_workspace_parser.py);
 it registers the `lop_sf_fcc_animation` subcommand from
 [`src/lammps_trajectory_analysis_workspaces/cli/lop_sf_fcc_animation_subparser.py`](../../../src/lammps_trajectory_analysis_workspaces/cli/lop_sf_fcc_animation_subparser.py).
-The `lop_sf_fcc_animation` invocation takes the HDF5 input as a
-positional argument and the output through `--output-vtkhdf-file`; it binds
-the callable handler with `set_defaults(func=...)`. The former `--input-file`
-option is no longer accepted.
+The `lop_sf_fcc_animation` invocation requires both `--input-file` and
+`--output-vtkhdf-file`; it binds the callable handler with
+`set_defaults(func=...)`. Positional input is not accepted.
 [`src/lammps_trajectory_analysis_workspaces/cli/cli_args.py`](../../../src/lammps_trajectory_analysis_workspaces/cli/cli_args.py)
 wraps the parsed namespace. The entry point dispatches by invoking
 `args.func(args)` rather than branching on command names.
@@ -51,7 +51,7 @@ The parser and callable constructor both require an existing regular input file.
 Do not duplicate external reader or writer logic.
 
 The target invocation is
-`uv run scripts/ltaw.py lop_sf_fcc_animation INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
+`uv run ltaw.py lop_sf_fcc_animation --input-file INPUT_FILE --output-vtkhdf-file OUTPUT_VTKHDF_FILE`.
 The script was renamed to avoid shadowing the package. The user chose
 script-only invocation rather than an installed console command.
 
