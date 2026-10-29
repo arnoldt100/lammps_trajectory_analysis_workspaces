@@ -8,19 +8,32 @@ file whenever the feature's behavior, data flow, or boundaries change.
 ### Done
 
 - The intended task workflow and three-stage pipeline are documented.
-- Entry-point scaffold added at
+- Entry point implemented at
   `scripts/lammps_trajectory_analysis_workspaces.py`.
-- Shared parser scaffold added at
+- Shared parser implemented at
   `src/lammps_trajectory_analysis_workspaces/ltaw_workspace_parser.py`.
+- Added `cli_args.py` with the parsed namespace wrapper.
+- Added and registered `lop_sf_fcc_animation` with required
+  `--input-file` and `--output-vtkhdf-file` path options.
+- Subparser-specific ICM docs live in
+  `workspaces/features/command_line_workspaces/features/lop_sf_fcc_animation_subcommand_workspaces/`;
+  this parent workspace covers the shared top-level parser.
+- Bound the command to `LopSfFccAnimation.run_from_cli_args` via
+  `set_defaults(func=...)`; the main program dispatches with `args.func(args)`.
+- Added the callable animation boundary, which validates/stores its paths and
+  prints a placeholder conversion message; actual HDF5/VTKHDF conversion is
+  deferred until the HDF5 structure is specified.
+- Added CLI and animation contract tests; the focused test suites pass.
+- Current gap: input-file existence is checked at callable construction but
+  not during argument parsing, so the two-boundary validation requirement is
+  not yet fully met.
 
 ### Pending
 
-- Implement the top-level CLI parser and task-specific subcommands.
-- Connect each subcommand to its task implementation and the three-stage
-  conversion pipeline.
-- Add contract and orchestration tests.
-- Record the concrete source/test paths and task-specific arguments in the
-  feature README and plan as they are established.
+- Add CLI-side input-file existence validation and its parser-level test.
+- Specify the HDF5 trajectory structure and required conversion semantics.
+- Implement actual HDF5-to-VTKHDF animation generation.
+- Add conversion tests using the specified HDF5 format.
 
 ### Not planned
 
@@ -31,14 +44,18 @@ file whenever the feature's behavior, data flow, or boundaries change.
   entry point for analysis tasks and animation-plot generation.
 - The package parser module owns top-level parser and subcommand construction;
   task-specific logic stays outside the entry-point script.
+- `lop_sf_fcc_animation` uses `set_defaults(func=...)` and the main program
+  dispatches by invoking the parsed handler with the parsed namespace.
+- The top-level parser requires a subcommand during normal execution.
 - A task generally consists of selecting LAMMPS simulation output files,
   using MDAnalysis to read them and produce HDF5 data, then converting that
   HDF5 data into VTKHDF files for animation.
 - Task-specific inputs and options belong to their corresponding subcommand;
   shared parsing and dispatch remain in the CLI feature.
-- Existing plan contract is retained: values consumed by a task are
-  validated at the command line and again when its CLI-facing class is
-  constructed.
+- Feature contract: values consumed by a task are validated at the command
+  line and again when its CLI-facing class is constructed. For the current
+  animation command, constructor validation exists; parser-level existence
+  validation remains a tracked gap.
 
 ## Current Data Flow
 
@@ -49,21 +66,20 @@ user invokes task subcommand
 scripts/lammps_trajectory_analysis_workspaces.py
         │
         ▼
-shared parser and subcommand dispatch
-        │
-        ├─ parse and validate task-specific arguments
-        ▼
-select relevant LAMMPS simulation output files
+ltaw_workspace_parser.py
         │
         ▼
-MDAnalysis reads selected outputs and produces HDF5 data
+lop_sf_fcc_animation subparser
+        ├─ parse input/output paths and bind func handler
+        ▼
+LopSfFccAnimation.run_from_cli_args(args)
         │
         ▼
-convert HDF5 data into VTKHDF files for animation
+callable currently prints placeholder conversion message
 ```
 
-The exact file formats, arguments, and conversion implementations are
-task-specific and remain to be recorded when each task is defined.
+The CLI starts from an existing HDF5 trajectory for this task; HDF5 layout,
+reader/writer dependencies, and actual VTKHDF conversion remain unspecified.
 
 ## Maintenance Rule
 

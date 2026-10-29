@@ -96,7 +96,7 @@ through a shared builder registry).
 
 - Standing plan: [top_level_plan.md](top_level_plan.md)
 - Status snapshot and decision log: [context.md](context.md)
-- Usage guide (how to copy and adapt the template in a domain project):
-  [docs/value_semantics_package_usage_guide.md](../../../../docs/value_semantics_package_usage_guide.md)
-- Parent workspace rules: [../top_level_plan.md](../top_level_plan.md)
-- Project-wide rules: [../../../top_level_plan.md](../../../top_level_plan.md)
+- A separate usage guide is not present in the current repository tree;
+  adaptation guidance is recorded in this feature plan.
+- Parent workspace rules: [../../top_level_plan.md](../../top_level_plan.md)
+- Project-wide rules: [../../../../top_level_plan.md](../../../../top_level_plan.md)

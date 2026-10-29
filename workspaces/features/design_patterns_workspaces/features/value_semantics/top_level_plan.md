@@ -2,9 +2,9 @@
 
 This is the canonical standing plan for the value-semantics template feature.
 It inherits all project-wide rules from
-[../../../top_level_plan.md](../../../top_level_plan.md) and the
+[../../../../top_level_plan.md](../../../../top_level_plan.md) and the
 collection-level rules from
-[../top_level_plan.md](../top_level_plan.md); it must not weaken either level.
+[../../top_level_plan.md](../../top_level_plan.md); it must not weaken either level.
 
 ## Objective
 
@@ -46,10 +46,11 @@ tests/
 workspaces/
   features/
     design_patterns_workspaces/
-      value_semantics/
-        README.md
-        context.md
-        top_level_plan.md
+      features/
+        value_semantics/
+          README.md
+          context.md
+          top_level_plan.md
 ```
 
 ### Public API
@@ -222,9 +223,8 @@ package has nine modules: the builder module was dropped in favor of the
 separate builder feature, the value object split into an interface plus
 immutable and mutable wrappers, behavior delegation was extracted into
 `protocols.py`/`value_object_behaviors.py`, and two concrete example
-implementations were added. The original text is preserved in
-[docs/design_patterns_templates_plan.md](../../../../docs/design_patterns_templates_plan.md)
-history; see `context.md` for the decision log.
+implementations were added. The original proposal is not present in the current repository tree; see
+`context.md` for the retained decision log.
 
 ### Historical note
 

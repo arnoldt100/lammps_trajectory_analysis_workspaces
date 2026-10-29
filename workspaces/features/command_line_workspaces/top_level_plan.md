@@ -55,6 +55,11 @@ workspaces/features/command_line_workspaces/
   README.md
   context.md
   top_level_plan.md
+  features/
+    lop_sf_fcc_animation_subcommand_workspaces/
+      README.md
+      context.md
+      top_level_plan.md
 ```
 
 The current CLI scaffold and intended production boundary are:
@@ -64,33 +69,50 @@ scripts/
   lammps_trajectory_analysis_workspaces.py  # executable entry point and main()
 src/
   lammps_trajectory_analysis_workspaces/
-    ltaw_workspace_parser.py                # top-level parser and subcommands
-    <task-specific CLI modules>              # parsing, validation, dispatch
+    cli_args.py                             # typed parsed-argument wrapper
+    ltaw_workspace_parser.py                # top-level parser and registration
+    cli/
+      lop_sf_fcc_animation_subparser.py      # task parser and handler binding
+    lop_sf_fcc_animation/
+      animation.py                           # callable task boundary
 tests/
-  <CLI contract and orchestration tests>
+  command_line/
+    test_cli_arguments.py
+  lop_sf_fcc_animation/
+    test_animation.py
 ```
 
 The script is the user-facing program entry point. Shared parser construction,
 per-task subcommand builders, and CLI-level orchestration/dispatch belong in
 the package; task-specific LAMMPS, MDAnalysis, HDF5, and VTKHDF work remains
-with task implementations. The script and parser module currently establish
-the entry-point and parser boundaries; task subcommands, dispatch, and tests
-remain pending. Record concrete task-module and test paths as they are
-established.
+with task implementations. The `lop_sf_fcc_animation` subparser binds
+`LopSfFccAnimation.run_from_cli_args` as its `func` handler. The main program
+parses the selected subcommand and invokes `args.func(args)`, with no
+command-name conditional.
+
+The current animation callable validates the input file and path types,
+retains the input and output paths, and prints a placeholder conversion
+message when invoked. It does not yet read HDF5 or create VTKHDF output;
+conversion behavior awaits the HDF5 structure specification.
 
 ## Test Plan
 
-1. The top-level parser exposes the registered task subcommands.
-2. Each task subcommand parses and validates its own required inputs and
-   options, and rejects invalid values.
-3. Parsed values are propagated unchanged to the matching task implementation
-   and are validated again at CLI-class construction.
-4. For a task using the general pipeline, verify stage order and explicit
+1. The top-level parser exposes registered task subcommands and requires a
+   selected subcommand for normal execution; top-level help remains available.
+2. The `lop_sf_fcc_animation` subcommand requires `--input-file` and
+   `--output-vtkhdf-file`, parsing both as `Path`.
+3. Each subparser binds its callable handler using `set_defaults(func=...)`;
+   the entry point dispatches with `args.func(args)`.
+4. Parsed values are propagated unchanged to the matching task implementation
+   and validated both during argument processing and at callable-class
+   construction. The current animation command still needs CLI-side
+   validation that its input path is an existing regular file.
+5. For a task using the general pipeline, verify stage order and explicit
    propagation of LAMMPS inputs to HDF5 conversion and HDF5 output to VTKHDF
    conversion.
-5. A failed stage is surfaced as a CLI failure; later stages are not invoked
+6. A failed stage is surfaced as a CLI failure; later stages are not invoked
    with missing or invalid output.
-6. CLI contract tests do not require production LAMMPS trajectory files when
+7. CLI contract tests do not require production LAMMPS trajectory files when
    stage collaborators can be replaced with controlled test doubles.
 
 ## Non-Goals
@@ -106,11 +128,15 @@ established.
 ## Acceptance Criteria
 
 - The CLI contract describes one distinct subcommand per task.
+- The `lop_sf_fcc_animation` command is registered with its two required
+  path options and handler-based dispatch.
 - The general task pipeline is documented in order: LAMMPS outputs,
   MDAnalysis-to-HDF5, then HDF5-to-VTKHDF for animation.
 - Task-specific parsing and dispatch remain separate from domain conversion
   implementations.
 - Invalid inputs and stage failures are surfaced rather than producing a
   success-shaped result.
-- Tests cover subcommand discovery, validation, dispatch, pipeline ordering,
-  and failure behavior.
+- Tests cover subcommand discovery, required options, handler registration,
+  dispatch, and constructor-level invalid input behavior. CLI-side input
+  existence validation and HDF5/VTKHDF pipeline ordering/conversion tests
+  remain pending.

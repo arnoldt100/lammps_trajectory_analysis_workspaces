@@ -13,11 +13,11 @@ Production code stays in `src/`; tests stay centralized in
 
 ## Feature Index
 
-- [builder_design_pattern/](builder_design_pattern/README.md) — domain-neutral
+- [features/builder_design_pattern/](features/builder_design_pattern/README.md) — domain-neutral
   key-based builder registry (`SupportsBuild`, `BuilderRegistry`,
   `BuilderKeyError`, `BuilderRegistrationError`). Active; template and tests
   implemented, timer migration complete.
-- [value_semantics/](value_semantics/README.md) — value-oriented object
+- [features/value_semantics/](features/value_semantics/README.md) — value-oriented object
   templates (immutable/mutable state-value wrappers, behavior protocol,
   interface, validation helpers, example owned-state types). Active; package
   and tests implemented, Phase 5 expansion evaluation complete.

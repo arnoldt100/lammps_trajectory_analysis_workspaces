@@ -2,8 +2,10 @@
 
 This is the canonical standing plan for the builder design pattern feature.
 It inherits all project-wide rules from
-[../../../../workspaces/top_level_plan.md](../../../../workspaces/top_level_plan.md)
-and adds feature-specific rules; it must not weaken the project-wide rules.
+[../../../../top_level_plan.md](../../../../top_level_plan.md)
+and the collection-level rules from
+[../../top_level_plan.md](../../top_level_plan.md); it must not weaken either
+level.
 
 ## Objective
 
@@ -42,7 +44,7 @@ tests/
 Feature workspace (plan, boundaries, and status only — no code):
 
 ```text
-workspaces/features/design_patterns_workspaces/builder_design_pattern/
+workspaces/features/design_patterns_workspaces/features/builder_design_pattern/
   README.md
   context.md
   top_level_plan.md

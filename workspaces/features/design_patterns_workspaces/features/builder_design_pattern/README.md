@@ -80,5 +80,5 @@ Planned consumers (not yet migrated; see `context.md`):
 
 - Standing plan: [top_level_plan.md](top_level_plan.md)
 - Status snapshot: [context.md](context.md)
-- Parent workspace rules: [../top_level_plan.md](../top_level_plan.md)
-- Project-wide rules: [../../../top_level_plan.md](../../../top_level_plan.md)
+- Parent workspace rules: [../../top_level_plan.md](../../top_level_plan.md)
+- Project-wide rules: [../../../../top_level_plan.md](../../../../top_level_plan.md)
