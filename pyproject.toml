@@ -7,8 +7,13 @@ authors = [
     { name = "Tharrington, Arnold", email = "arnoldt@ornl.gov" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "lammps-trajectory-analysis-tools",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.26,<0.10.0"]
 build-backend = "uv_build"
+
+[tool.uv.sources]
+lammps-trajectory-analysis-tools = { path = "../lammps_trajectory_analysis_tools", editable = true }
