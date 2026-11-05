@@ -22,6 +22,10 @@ workspaces/
   context.md
   top_level_plan.md
   features/
+    file_parser_workspaces/
+      README.md
+      context.md
+      top_level_plan.md
     command_line_workspaces/
       README.md
       context.md
@@ -51,6 +55,7 @@ workspaces/
 
 | Feature | Workspace | Owned production code | Owned tests | Status |
 |---|---|---|---|---|
+| Slurm batch-file generation / file parser | [features/file_parser_workspaces/](features/file_parser_workspaces/README.md) | Planned: `scripts/create_batch_file.py` and `src/lammps_trajectory_analysis_workspaces/file_parser/` | Planned: `tests/file_parser/` and `tests/command_line/test_create_batch_file.py` | Planning only; replacement contract confirmed |
 | Command line | [features/command_line_workspaces/](features/command_line_workspaces/README.md) | Entry point, shared parser, CLI argument wrapper, command subparsers and dispatch | `tests/command_line/` | Active; `lop_sf_fcc_animation` subcommand implemented, conversion deferred |
 | LOP-SF-FCC animation subcommand | [features/command_line_workspaces/features/lop_sf_fcc_animation_subcommand_workspaces/](features/command_line_workspaces/features/lop_sf_fcc_animation_subcommand_workspaces/README.md) | `src/lammps_trajectory_analysis_workspaces/cli/lop_sf_fcc_animation_subparser.py` | `tests/command_line/test_cli_arguments.py` | Active; parser-side input existence validation pending |
 | Design-pattern templates | [features/design_patterns_workspaces/](features/design_patterns_workspaces/context.md) | `src/lammps_trajectory_analysis_workspaces/design_patterns_templates/` | `tests/design_patterns_templates/` | Active |
