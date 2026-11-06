@@ -110,26 +110,29 @@ Example template:
 
 ```text
 #!/bin/bash
-#SBATCH --job-name=__JOB_NAME__
-#SBATCH --time=__WALLTIME__
-echo "__JOB_NAME__"
+#SBATCH --job-name=__jobname__
+#SBATCH --time=__walltime__
+echo "__jobname__"
 ```
 
-Example JSON:
+Example replacement file:
 
-```json
-{
-  "__JOB_NAME__": "analysis",
-  "__WALLTIME__": "01:00:00"
+```text
+data = {
+  "jobname": "analysis",
+  "walltime": "01:00:00"
 }
 ```
 
-- The top-level JSON value must be an object mapping fully delimited
-  placeholder strings to string values. Reject invalid key shapes and
-  non-string values; do not silently coerce them.
+- `data =` is followed by a JSON object, not executable Python. Its keys
+  are case-sensitive placeholder names without delimiters, must be nonempty,
+  cannot contain `__` or a newline, and cannot end in `_`. Values must be
+  strings.
+- Standalone JSON objects remain supported with fully delimited placeholder
+  keys. Reject invalid key shapes and non-string values without coercion.
 - Interpret placeholders using the non-greedy pattern `__(.*?)__`, without
   DOTALL, so multiple placeholders on a line are independent and matches do
-  not span lines. JSON keys must fully match this same placeholder syntax.
+  not span lines. Standalone JSON keys must fully match this syntax.
 - Each occurrence is replaced, including repeated placeholders.
 - A matched placeholder missing from JSON is an error. Validate all matches
   before creating output.
@@ -231,8 +234,8 @@ Review phases:
 Phase 1 renders completely in memory before Phase 2 opens any output file.
 The standalone command retains Stage 1 parsing-only behavior until Phase 3.
 
-Stage 2, Phases 1 and 2 are approved. Phase 3 is implemented and verified,
-pending user review. Main passes the same parsed dataclass directly to
+All three Stage 2 phases are implemented, verified, and approved.
+Main passes the same parsed dataclass directly to
 the module and returns it after conversion. Expected `OSError` and
 `ValueError` exceptions (including JSON and Unicode errors) are translated
 to concise stderr diagnostics and exit status 1, without a broad catch-all.

@@ -10,8 +10,8 @@ memory, with 49 focused tests. `create_output_file(options)` reads UTF-8 sources
 and encodes the complete result before exclusive output creation, preserves
 line endings, and removes incomplete output after write or close failures.
 Cleanup failures report both the original failure and cleanup failure.
-There are 41 additional file-handling tests. Phase 3 is implemented and
-verified, pending review: main passes the same parsed dataclass directly
+There are 41 additional file-handling tests. Phase 3 is implemented,
+verified, and approved: main passes the same parsed dataclass directly
 to the JSON module and returns it after successful conversion. Expected
 conversion errors (`OSError` and `ValueError`, including JSON and Unicode
 errors) produce concise stderr diagnostics and exit status 1. Unexpected
@@ -40,8 +40,10 @@ Keep command-line handling separate from reusable file-conversion logic.
 - Define the dataclass in its own `file_parser.file_parser_options` module,
   and re-export it from the package, not from the script.
   Pass the returned object directly to `json_file_parser.create_output_file`.
-- JSON keys include the delimiters, for example
-  `{"__JOB_NAME__": "analysis"}`.
+- Replacement files may contain `data =` followed by a JSON object with
+  undelimited, case-sensitive keys such as `"jobname"` for `__jobname__`.
+  Standalone JSON objects remain supported with fully delimited keys, for
+  example `{"__JOB_NAME__": "analysis"}`.
 - Match placeholders independently, rather than using the greedy
   `__(.*)__` literally.
 - Values are strings; substitution is literal and single-pass.
@@ -56,7 +58,7 @@ Keep command-line handling separate from reusable file-conversion logic.
 
 ## Next Implementation Work
 
-Await Stage 2, Phase 3 review and approval. Both stages are implemented and
-verified; no further implementation phase is planned. See
+Both stages and all review phases are implemented, verified, and approved.
+No further implementation phase is planned. See
 [the implementation plan](top_level_plan.md).
 Neither stage changes the existing analysis CLI.

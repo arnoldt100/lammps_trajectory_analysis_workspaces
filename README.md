@@ -33,17 +33,20 @@ For example, a template containing:
 
 ```text
 #!/bin/bash
-#SBATCH --job-name=__JOB_NAME__
-#SBATCH --time=__WALLTIME__
-echo "__JOB_NAME__"
+#SBATCH --job-name=__jobname__
+#SBATCH --time=__walltime__
+echo "__jobname__"
 ```
 
-with this JSON replacement map:
+with this replacement file:
 
-```json
-{
-  "__JOB_NAME__": "analysis",
-  "__WALLTIME__": "01:00:00"
+```text
+data = {
+  "jobname": "PC-9-ar_small_box",
+  "walltime": "00:05:00",
+  "batch_queue": "batch",
+  "number_nodes": "1",
+  "number_cores": "1"
 }
 ```
 
@@ -51,15 +54,21 @@ produces:
 
 ```text
 #!/bin/bash
-#SBATCH --job-name=analysis
-#SBATCH --time=01:00:00
-echo "analysis"
+#SBATCH --job-name=PC-9-ar_small_box
+#SBATCH --time=00:05:00
+echo "PC-9-ar_small_box"
 ```
 
-JSON must be an object whose keys fully match the placeholder pattern
-`__(.*?)__` (without DOTALL) and whose values are strings. Missing
-replacements are errors; unused keys are allowed. Substitution is literal,
-single-pass, and non-recursive, with no shell expansion or job submission.
+The `data =` prefix is followed by a JSON object, not executable Python:
+use JSON syntax and string values. Each key names a case-sensitive
+placeholder surrounded by double underscores, so `jobname` replaces
+`__jobname__`. Keys must be nonempty, cannot contain a newline or `__`,
+and cannot end in `_` (which would overlap the closing delimiter).
+For compatibility, a standalone JSON object is also accepted; its keys
+must already include the delimiters, e.g. `{"__JOB_NAME__": "analysis"}`.
+Placeholders match `__(.*?)__` (without DOTALL). Missing replacements are
+errors; unused keys are allowed. Substitution is literal, single-pass, and
+non-recursive, with no shell expansion or job submission.
 
 The script passes the parsed dataclass directly to
 `json_file_parser.create_output_file(options)`. Sources are read as UTF-8;

@@ -27,6 +27,61 @@ def test_render_template_generates_expected_slurm_text():
     )
 
 
+def test_render_template_accepts_data_assignment_with_named_keys():
+    json_text = """data = {
+  "jobname": "PC-9-ar_small_box",
+  "walltime": "00:05:00","batch_queue": "batch",
+  "number_nodes": "1",
+  "number_cores": "1"
+}"""
+    template = (
+        "__jobname__ __walltime__ __batch_queue__ "
+        "__number_nodes__ __number_cores__ __jobname__"
+    )
+
+    assert json_file_parser._render_template(template, json_text) == (
+        "PC-9-ar_small_box 00:05:00 batch 1 1 PC-9-ar_small_box"
+    )
+
+
+@pytest.mark.parametrize("prefix", ["data=", "  data  = \n", "\ndata\t=\t"])
+def test_render_template_accepts_assignment_whitespace(prefix):
+    assert json_file_parser._render_template("__jobname__", prefix + '{"jobname": "x"}') == "x"
+
+
+@pytest.mark.parametrize(
+    "json_text",
+    [
+        'other = {"jobname": "x"}',
+        'data == {"jobname": "x"}',
+        'data = {"jobname": "x"}; print("not executed")',
+        "data = {'jobname': 'x'}",
+        'data = {"jobname": "x",}',
+    ],
+)
+def test_render_template_rejects_non_json_assignment(json_text):
+    with pytest.raises(json.JSONDecodeError):
+        json_file_parser._render_template("__jobname__", json_text)
+
+
+def test_render_template_rejects_assignment_non_object_and_non_string_value():
+    with pytest.raises(ValueError, match="JSON replacements must be an object"):
+        json_file_parser._render_template("", "data = []")
+    with pytest.raises(ValueError, match="must be a string"):
+        json_file_parser._render_template("", 'data = {"jobname": 1}')
+
+
+@pytest.mark.parametrize("key", ["", "bad__name", "bad\nname", "bad_"])
+def test_render_template_rejects_invalid_assignment_keys(key):
+    with pytest.raises(ValueError, match="Invalid placeholder key"):
+        json_file_parser._render_template("", "data = " + json.dumps({key: "x"}))
+
+
+def test_render_template_assignment_keys_are_case_sensitive():
+    with pytest.raises(ValueError, match="Missing replacement"):
+        json_file_parser._render_template("__JOBNAME__", 'data = {"jobname": "x"}')
+
+
 @pytest.mark.parametrize(
     ("template", "expected"),
     [
@@ -190,6 +245,9 @@ def test_create_output_file_copies_template_without_placeholders(options):
     ("json_text", "error"),
     [
         ("{", json.JSONDecodeError),
+        ('data = {"jobname": "x"}; pass', json.JSONDecodeError),
+        ('data = {"bad__name": "x"}', ValueError),
+        ('data = {"jobname": 1}', ValueError),
         ("[]", ValueError),
         ('{"JOB": "analysis"}', ValueError),
         ('{"__JOB__": 42}', ValueError),

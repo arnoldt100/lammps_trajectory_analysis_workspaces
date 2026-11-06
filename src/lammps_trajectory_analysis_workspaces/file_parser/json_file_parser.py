@@ -9,21 +9,35 @@ from lammps_trajectory_analysis_workspaces.file_parser.file_parser_options impor
 
 
 _PLACEHOLDER = re.compile(r"__(.*?)__")
+_DATA_ASSIGNMENT = re.compile(r"\s*data\s*=\s*")
 
 
 def _render_template(template: str, json_text: str) -> str:
     """Apply validated JSON replacements literally, without file I/O."""
-    decoded: object = json.loads(json_text)
+    assignment = _DATA_ASSIGNMENT.match(json_text)
+    decoded: object = json.loads(json_text[assignment.end():] if assignment else json_text)
     if not isinstance(decoded, dict):
         raise ValueError("JSON replacements must be an object")
 
     replacements: dict[str, str] = {}
     for key, value in decoded.items():
-        if not isinstance(key, str) or _PLACEHOLDER.fullmatch(key) is None:
-            raise ValueError(f"Invalid placeholder key: {key!r}")
+        if assignment:
+            if (
+                not isinstance(key, str)
+                or not key
+                or key.endswith("_")
+                or "__" in key
+                or "\n" in key
+            ):
+                raise ValueError(f"Invalid placeholder key: {key!r}")
+            placeholder = f"__{key}__"
+        else:
+            if not isinstance(key, str) or _PLACEHOLDER.fullmatch(key) is None:
+                raise ValueError(f"Invalid placeholder key: {key!r}")
+            placeholder = key
         if not isinstance(value, str):
             raise ValueError(f"Replacement for {key!r} must be a string")
-        replacements[key] = value
+        replacements[placeholder] = value
 
     def replace(match: re.Match[str]) -> str:
         placeholder = match.group(0)

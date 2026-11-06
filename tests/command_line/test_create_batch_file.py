@@ -317,6 +317,27 @@ def test_standalone_script_generates_expected_output(
     )
 
 
+def test_standalone_script_accepts_data_assignment(tmp_path, invocation_directory):
+    template = tmp_path / "template.slurm"
+    output = tmp_path / "batch.slurm"
+    replacements = tmp_path / "replacements.json"
+    template.write_text("#SBATCH --job-name=__jobname__\n", encoding="utf-8")
+    replacements.write_text('data = {"jobname": "PC-9-ar_small_box"}', encoding="utf-8")
+
+    result = run_script(
+        [
+            "--input-file", str(template),
+            "--output-file", str(output),
+            "--json-file", str(replacements),
+        ],
+        invocation_directory,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == result.stderr == ""
+    assert output.read_text(encoding="utf-8") == "#SBATCH --job-name=PC-9-ar_small_box\n"
+
+
 def test_standalone_script_leaves_existing_files_unchanged(tmp_path):
     contents = {
         "template.slurm": b"__JOB_NAME__",
