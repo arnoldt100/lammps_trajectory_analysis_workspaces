@@ -12,7 +12,7 @@ uv run python -c "import sys; print('GIL Enabled:', sys._is_gil_enabled())" # En
 ```
 ## Documentation
 
-### Batch File Command (Stage 1: Parsing Only)
+### Generate a Slurm Batch File
 
 ```sh
 uv run "$LTAW_TOP_LEVEL/scripts/create_batch_file.py" \
@@ -26,12 +26,48 @@ shared `FileParserOptions` dataclass. Relative paths are relative to the
 process working directory. Use `-h` or `--help` to display usage.
 Missing required options, missing values, unknown options, and abbreviated
 option names produce argparse diagnostics on stderr and exit status 2.
-Help and valid parsing exit with status 0.
+Help and successful conversion exit with status 0. Conversion failures
+produce a concise stderr diagnostic and exit status 1.
 
-**This command currently parses arguments only.** It does not read or
-validate source files, read JSON, or create output. A status of 0 does not
-mean a batch file was generated. Stage 2 will pass the options dataclass
-to the JSON file parser module for conversion.
+For example, a template containing:
+
+```text
+#!/bin/bash
+#SBATCH --job-name=__JOB_NAME__
+#SBATCH --time=__WALLTIME__
+echo "__JOB_NAME__"
+```
+
+with this JSON replacement map:
+
+```json
+{
+  "__JOB_NAME__": "analysis",
+  "__WALLTIME__": "01:00:00"
+}
+```
+
+produces:
+
+```text
+#!/bin/bash
+#SBATCH --job-name=analysis
+#SBATCH --time=01:00:00
+echo "analysis"
+```
+
+JSON must be an object whose keys fully match the placeholder pattern
+`__(.*?)__` (without DOTALL) and whose values are strings. Missing
+replacements are errors; unused keys are allowed. Substitution is literal,
+single-pass, and non-recursive, with no shell expansion or job submission.
+
+The script passes the parsed dataclass directly to
+`json_file_parser.create_output_file(options)`. Sources are read as UTF-8;
+line endings and final-newline presence are preserved. Validation and
+encoding finish before output is created. Existing output entries,
+including symlinks, are never overwritten, and the output parent directory
+must already exist. Failed writes remove incomplete output; cleanup
+failures are reported explicitly. Success produces no console output.
 
 The standalone script can be invoked by absolute path from outside the
 repository. Use `uv run --project "$LTAW_TOP_LEVEL"` in that case to select

@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -149,7 +150,9 @@ def test_parser_preserves_paths_without_file_io(
     assert capsys.readouterr() == ("", "")
 
 
-def test_main_returns_parsed_options(batch_file_script, monkeypatch):
+def test_main_passes_same_options_to_module_and_returns_them(
+    batch_file_script, monkeypatch,
+):
     options = FileParserOptions(
         Path("template.slurm"), Path("batch.slurm"), Path("replacements.json")
     )
@@ -160,9 +163,59 @@ def test_main_returns_parsed_options(batch_file_script, monkeypatch):
         return options
 
     monkeypatch.setattr(batch_file_script, "parse_command_line_arguments", fake_parse)
+    conversions = []
+    monkeypatch.setattr(
+        batch_file_script.json_file_parser, "create_output_file", conversions.append
+    )
 
     assert batch_file_script._main() is options
     assert calls == [True]
+    assert len(conversions) == 1
+    assert conversions[0] is options
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        ValueError("invalid replacement"),
+        json.JSONDecodeError("invalid JSON", "{", 0),
+        PermissionError("read denied"),
+        OSError("write failed; failed to remove incomplete output: cleanup denied"),
+        UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid byte"),
+        UnicodeEncodeError("utf-8", "\ud800", 0, 1, "invalid surrogate"),
+    ],
+)
+def test_main_reports_expected_conversion_errors(
+    batch_file_script, arguments, monkeypatch, capsys, error,
+):
+    monkeypatch.setattr(sys, "argv", ["create_batch_file.py", *arguments])
+
+    def fail(_options):
+        raise error
+
+    monkeypatch.setattr(batch_file_script.json_file_parser, "create_output_file", fail)
+
+    with pytest.raises(SystemExit) as exc_info:
+        batch_file_script._main()
+
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == f"create_batch_file.py: error: {error}\n"
+
+
+def test_main_does_not_hide_unexpected_errors(
+    batch_file_script, arguments, monkeypatch,
+):
+    monkeypatch.setattr(sys, "argv", ["create_batch_file.py", *arguments])
+
+    def fail(_options):
+        raise RuntimeError("unexpected failure")
+
+    monkeypatch.setattr(batch_file_script.json_file_parser, "create_output_file", fail)
+
+    with pytest.raises(RuntimeError, match="unexpected failure"):
+        batch_file_script._main()
 
 
 @pytest.fixture(params=["repository", "external"])
@@ -195,7 +248,8 @@ def test_standalone_script_displays_help(help_option, invocation_directory):
     assert "--input-file INPUT_FILE" in result.stdout
     assert "--output-file OUTPUT_FILE" in result.stdout
     assert "--json-file JSON_FILE" in result.stdout
-    assert "Currently parses arguments only" in result.stdout
+    assert "Existing output paths are never overwritten." in result.stdout
+    assert "parses arguments only" not in result.stdout
 
 
 @pytest.mark.parametrize(
@@ -225,14 +279,25 @@ def test_standalone_script_reports_argument_errors(
     assert diagnostic in result.stderr
 
 
-def test_standalone_script_parses_without_creating_files(
-    invocation_directory, tmp_path,
+@pytest.mark.parametrize("line_ending", [b"\n", b"\r\n"])
+@pytest.mark.parametrize("final_newline", [False, True])
+def test_standalone_script_generates_expected_output(
+    invocation_directory, tmp_path, line_ending, final_newline,
 ):
     paths = [
-        tmp_path / "missing template.slurm",
+        tmp_path / "template with spaces.slurm",
         tmp_path / "batch.slurm",
-        tmp_path / "missing.json",
+        tmp_path / "replacements.json",
     ]
+    suffix = line_ending if final_newline else b""
+    paths[0].write_bytes(
+        b"#!/bin/bash" + line_ending
+        + b"#SBATCH --job-name=__JOB__" + line_ending
+        + b"echo __JOB__ __TIME__" + suffix
+    )
+    paths[2].write_text(
+        '{"__JOB__": "analysis", "__TIME__": "01:00:00"}', encoding="utf-8"
+    )
     result = run_script(
         [
             "--input-file", str(paths[0]),
@@ -245,14 +310,18 @@ def test_standalone_script_parses_without_creating_files(
     assert result.returncode == 0
     assert result.stdout == ""
     assert result.stderr == ""
-    assert list(tmp_path.iterdir()) == []
+    assert paths[1].read_bytes() == (
+        b"#!/bin/bash" + line_ending
+        + b"#SBATCH --job-name=analysis" + line_ending
+        + b"echo analysis 01:00:00" + suffix
+    )
 
 
 def test_standalone_script_leaves_existing_files_unchanged(tmp_path):
     contents = {
-        "template.slurm": b"\xff__JOB_NAME__",
+        "template.slurm": b"__JOB_NAME__",
         "batch.slurm": b"existing output",
-        "replacements.json": b"not valid JSON",
+        "replacements.json": b'{"__JOB_NAME__": "analysis"}',
     }
     for name, content in contents.items():
         (tmp_path / name).write_bytes(content)
@@ -266,7 +335,114 @@ def test_standalone_script_leaves_existing_files_unchanged(tmp_path):
         tmp_path,
     )
 
-    assert result.returncode == 0
+    assert result.returncode == 1
     assert result.stdout == ""
-    assert result.stderr == ""
+    assert "create_batch_file.py: error:" in result.stderr
+    assert "File exists" in result.stderr
+    assert "Traceback" not in result.stderr
     assert {path.name: path.read_bytes() for path in tmp_path.iterdir()} == contents
+
+
+@pytest.mark.parametrize(
+    ("failure", "diagnostic"),
+    [
+        ("missing-input", "No such file"),
+        ("missing-json", "No such file"),
+        ("invalid-json", "Expecting"),
+        ("non-object-json", "must be an object"),
+        ("invalid-key", "Invalid placeholder key"),
+        ("non-string-value", "must be a string"),
+        ("missing-replacement", "Missing replacement"),
+        ("invalid-utf8-input", "codec can't decode"),
+        ("invalid-utf8-json", "codec can't decode"),
+        ("invalid-utf8-output", "codec can't encode"),
+        ("missing-parent", "No such file"),
+        ("output-symlink", "File exists"),
+        ("dangling-symlink", "File exists"),
+        ("output-is-input", "File exists"),
+        ("output-is-json", "File exists"),
+    ],
+)
+def test_standalone_script_reports_conversion_failures(
+    tmp_path, failure, diagnostic,
+):
+    input_path = tmp_path / "template.slurm"
+    json_path = tmp_path / "replacements.json"
+    output_path = tmp_path / "batch.slurm"
+    input_path.write_bytes(b"__JOB__")
+    json_path.write_bytes(b'{"__JOB__": "analysis"}')
+
+    if failure == "missing-input":
+        input_path.unlink()
+    elif failure == "missing-json":
+        json_path.unlink()
+    elif failure == "invalid-json":
+        json_path.write_bytes(b"{")
+    elif failure == "non-object-json":
+        json_path.write_bytes(b"[]")
+    elif failure == "invalid-key":
+        json_path.write_bytes(b'{"JOB": "analysis"}')
+    elif failure == "non-string-value":
+        json_path.write_bytes(b'{"__JOB__": 42}')
+    elif failure == "missing-replacement":
+        json_path.write_bytes(b"{}")
+    elif failure == "invalid-utf8-input":
+        input_path.write_bytes(b"\xff")
+    elif failure == "invalid-utf8-json":
+        json_path.write_bytes(b"\xff")
+    elif failure == "invalid-utf8-output":
+        json_path.write_bytes(b'{"__JOB__": "\\ud800"}')
+    elif failure == "missing-parent":
+        output_path = tmp_path / "missing" / "batch.slurm"
+    elif failure == "output-symlink":
+        output_path.symlink_to(input_path)
+    elif failure == "dangling-symlink":
+        output_path.symlink_to(tmp_path / "missing")
+    elif failure == "output-is-input":
+        output_path = input_path
+    elif failure == "output-is-json":
+        output_path = json_path
+
+    originals = {
+        path: path.read_bytes()
+        for path in (input_path, json_path)
+        if path.exists()
+    }
+    original_link = output_path.readlink() if output_path.is_symlink() else None
+    result = run_script(
+        [
+            "--input-file", str(input_path),
+            "--output-file", str(output_path),
+            "--json-file", str(json_path),
+        ],
+        tmp_path,
+    )
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "create_batch_file.py: error:" in result.stderr
+    assert diagnostic in result.stderr
+    assert "Traceback" not in result.stderr
+    assert all(path.read_bytes() == content for path, content in originals.items())
+    if original_link is not None:
+        assert output_path.readlink() == original_link
+    elif output_path not in originals:
+        assert not output_path.exists()
+
+
+def test_standalone_script_resolves_relative_paths_from_working_directory(tmp_path):
+    (tmp_path / "template.slurm").write_bytes(b"__JOB__")
+    (tmp_path / "replacements.json").write_bytes(b'{"__JOB__": "analysis"}')
+
+    result = run_script(
+        [
+            "--input-file", "template.slurm",
+            "--output-file", "batch.slurm",
+            "--json-file", "replacements.json",
+        ],
+        tmp_path,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == result.stderr == ""
+    assert (tmp_path / "batch.slurm").read_bytes() == b"analysis"

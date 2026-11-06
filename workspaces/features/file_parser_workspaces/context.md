@@ -3,21 +3,22 @@
 ## Status
 
 Stage 1, all three phases are implemented, verified, and approved.
-The main function calls the parser and returns its
-`FileParserOptions`; the entry-point guard invokes main. Help, argument
-errors, and parsing-only invocation work inside and outside the repository.
-Five options tests, thirty-seven parsing and invocation tests, and
-twenty-one existing CLI tests pass (63 total).
-Stage 2, Phase 1 is approved.
+The parser returns `FileParserOptions`; the entry-point guard invokes main.
+Stage 2, Phases 1 and 2 are approved.
 The JSON module validates replacement maps and renders template text in
-memory, with 49 focused tests. Phase 2 is implemented and verified, pending
-user review: `create_output_file(options)` reads UTF-8 sources, validates
+memory, with 49 focused tests. `create_output_file(options)` reads UTF-8 sources, validates
 and encodes the complete result before exclusive output creation, preserves
 line endings, and removes incomplete output after write or close failures.
 Cleanup failures report both the original failure and cleanup failure.
-There are 41 additional file-handling tests; all 153 file-parser and CLI
-tests pass. CLI conversion integration is not implemented; the standalone
-command still performs parsing only.
+There are 41 additional file-handling tests. Phase 3 is implemented and
+verified, pending review: main passes the same parsed dataclass directly
+to the JSON module and returns it after successful conversion. Expected
+conversion errors (`OSError` and `ValueError`, including JSON and Unicode
+errors) produce concise stderr diagnostics and exit status 1. Unexpected
+errors propagate. Help and successful conversion exit with status 0;
+argument errors exit with status 2. Usage documentation describes conversion.
+All 182 file-parser and CLI tests pass, including standalone invocation
+inside and outside the repository.
 
 ## Purpose
 
@@ -55,7 +56,7 @@ Keep command-line handling separate from reusable file-conversion logic.
 
 ## Next Implementation Work
 
-Await Stage 2, Phase 2 review and approval. Phase 3 integrates conversion
-into the CLI and updates usage documentation. Follow
+Await Stage 2, Phase 3 review and approval. Both stages are implemented and
+verified; no further implementation phase is planned. See
 [the implementation plan](top_level_plan.md).
 Neither stage changes the existing analysis CLI.

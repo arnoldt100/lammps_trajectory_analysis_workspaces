@@ -9,7 +9,10 @@ source_root = Path(__file__).resolve().parents[1] / "src"
 if source_root.is_dir():
     sys.path.insert(0, str(source_root))
 
-from lammps_trajectory_analysis_workspaces.file_parser import FileParserOptions
+from lammps_trajectory_analysis_workspaces.file_parser import (
+    FileParserOptions,
+    json_file_parser,
+)
 
 
 def parse_command_line_arguments(
@@ -18,10 +21,7 @@ def parse_command_line_arguments(
     """Parse paths for batch-file generation without reading or writing files."""
     parser = argparse.ArgumentParser(
         description="Generate a Slurm batch file from a template and JSON replacements.",
-        epilog=(
-            "Currently parses arguments only; no files are read or written. "
-            "JSON conversion will be added in Stage 2."
-        ),
+        epilog="Existing output paths are never overwritten.",
         allow_abbrev=False,
     )
     parser.add_argument(
@@ -43,7 +43,13 @@ def parse_command_line_arguments(
 
 
 def _main() -> FileParserOptions:
-    return parse_command_line_arguments()
+    options = parse_command_line_arguments()
+    try:
+        json_file_parser.create_output_file(options)
+    except (OSError, ValueError) as error:
+        print(f"create_batch_file.py: error: {error}", file=sys.stderr)
+        raise SystemExit(1) from None
+    return options
 
 
 if __name__ == "__main__":

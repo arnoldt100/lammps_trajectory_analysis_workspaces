@@ -12,8 +12,9 @@ tests pass, including existing CLI regression tests.
 
 Stage 2, Phase 1 adds in-memory JSON validation and literal template
 substitution, with 49 focused tests, and is approved. Phase 2 adds safe file
-handling with 41 additional tests and is pending review. All 153 file-parser
-and CLI tests pass. CLI conversion integration is not yet implemented.
+handling with 41 additional tests and is approved. Phase 3 integrates CLI
+conversion and documents complete usage; it is pending review. All 182
+file-parser and CLI tests pass.
 
 ## Implementation Stages
 
@@ -55,12 +56,14 @@ Planned tests:
   coverage (implemented in Phase 2).
 - `tests/file_parser/`: replacement behavior, validation, and file handling.
 - `tests/command_line/test_create_batch_file.py`: parsing contract
-  and standalone command behavior (implemented in Stage 1, Phases 2 and 3).
+  and standalone command behavior, including conversion, error diagnostics,
+  exit status, and module delegation (updated in Stage 2, Phase 3).
 
 The existing [`scripts/create_batch_file.py`](../../../scripts/create_batch_file.py)
-parses arguments through its main function and entry-point guard. It does
-not read source files, validate JSON, or create output. See the
-[project README](../../../README.md) for parsing-only usage and limitations.
+parses arguments and passes the returned dataclass to the JSON module
+through its main function and entry-point guard. It reports expected
+conversion failures on stderr with exit status 1. See the
+[project README](../../../README.md) for complete conversion usage.
 
 ## Library Conversion (Stage 2, Phase 2)
 
@@ -96,7 +99,7 @@ incomplete output; a cleanup failure explicitly reports both failures.
 - Inherits [project-wide rules](../../top_level_plan.md), including execution
   through `uv run`.
 - Uses the Python standard library; no new dependencies are planned.
-- Stage 2 will delegate conversion from the standalone script to the
+- The standalone script delegates conversion to the
   file-parser package.
 - This is not a new `ltaw.py` subcommand and does not change the existing
   shared CLI dispatcher.

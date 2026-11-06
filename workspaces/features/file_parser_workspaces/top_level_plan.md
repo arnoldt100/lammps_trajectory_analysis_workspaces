@@ -27,7 +27,7 @@ uv run "$LTAW_TOP_LEVEL/scripts/create_batch_file.py" \
 - Conversion succeeds with exit status 0.
 - Invalid JSON, invalid replacements, missing input files, an existing
   output path, and other conversion or I/O failures produce an explicit
-  stderr diagnostic and nonzero exit status.
+  stderr diagnostic and exit status 1.
 - The entry-point guard must actually invoke the main function.
 - Do not add a `ltaw.py` subcommand or an installed console command.
 
@@ -231,8 +231,12 @@ Review phases:
 Phase 1 renders completely in memory before Phase 2 opens any output file.
 The standalone command retains Stage 1 parsing-only behavior until Phase 3.
 
-Stage 2, Phase 1 is approved. Phase 2 is implemented and verified, pending
-user review. See
+Stage 2, Phases 1 and 2 are approved. Phase 3 is implemented and verified,
+pending user review. Main passes the same parsed dataclass directly to
+the module and returns it after conversion. Expected `OSError` and
+`ValueError` exceptions (including JSON and Unicode errors) are translated
+to concise stderr diagnostics and exit status 1, without a broad catch-all.
+See
 [current context](context.md) for verification results.
 
 1. Add `json_file_parser.create_output_file(options: FileParserOptions)` to
