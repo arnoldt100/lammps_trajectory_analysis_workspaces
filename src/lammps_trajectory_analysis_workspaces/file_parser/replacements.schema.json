@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Batch template replacements",
+  "description": "JSON object following the data assignment prefix.",
+  "type": "object",
+  "propertyNames": {
+    "minLength": 1,
+    "not": {
+      "anyOf": [
+        {"pattern": "__"},
+        {"pattern": "\n"},
+        {"pattern": "_$"}
+      ]
+    }
+  },
+  "additionalProperties": {
+    "type": "string"
+  }
+}
