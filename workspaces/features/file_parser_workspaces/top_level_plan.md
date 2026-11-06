@@ -148,7 +148,8 @@ Example JSON:
 - Read and write UTF-8 text and preserve template line endings and trailing
   newline presence.
 - Read and validate both source files and finish substitution before
-  opening the output.
+  opening the output. Encode the complete rendered result as UTF-8 before
+  output creation so encoding errors also leave output untouched.
 - Refuse any existing output entry, including symlinks. Use exclusive
   creation, not only a prior existence check, to prevent race-based
   overwriting. This also protects input and JSON files when paths coincide.
@@ -164,8 +165,9 @@ Example JSON:
 
 ## Implementation Sequence
 
-Implementation is divided into two stages. Stage 1 is authorized in
-reviewable phases; Stage 2 awaits a separate implementation request.
+Implementation is divided into two stages, both authorized in reviewable
+phases. Stop after each completed phase for user review and approval before
+starting the next phase.
 
 ### Stage 1 - Command-Line Parsing
 
@@ -176,7 +178,7 @@ Review phases:
 3. Main-function and entry-point wiring, standalone invocation tests, and
    parsing-only usage documentation.
 
-Phase 3 is implemented and verified, pending user review. See
+All three Stage 1 phases are implemented, verified, and approved. See
 [current context](context.md) for verification results.
 
 Stop after each completed phase for user review and approval before
@@ -211,6 +213,27 @@ delivered only after Stage 2.
 ### Stage 2 - Passing Arguments to the JSON File Module
 
 Depends on Stage 1.
+
+Review phases:
+
+1. JSON validation and in-memory template substitution in
+   `json_file_parser.py`, with focused tests. The private `_render_template`
+   helper accepts template and JSON text and returns rendered text. It
+   raises `json.JSONDecodeError` for malformed JSON and `ValueError` for
+   invalid replacements or missing placeholders. No file I/O or CLI changes.
+2. Implement `create_output_file(options: FileParserOptions)` using the
+   Phase 1 helper, adding UTF-8 file handling, exclusive output creation,
+   incomplete-output cleanup, and focused file-safety tests.
+3. Pass the parsed dataclass to the module from the standalone script,
+   translate expected errors, add end-to-end tests, and replace parsing-only
+   usage documentation with complete conversion usage.
+
+Phase 1 renders completely in memory before Phase 2 opens any output file.
+The standalone command retains Stage 1 parsing-only behavior until Phase 3.
+
+Stage 2, Phase 1 is approved. Phase 2 is implemented and verified, pending
+user review. See
+[current context](context.md) for verification results.
 
 1. Add `json_file_parser.create_output_file(options: FileParserOptions)` to
    the Stage 1 package using the standard library. Implement the JSON
@@ -288,6 +311,9 @@ For Stage 2:
 ```text
 uv run python -m pytest tests/file_parser tests/command_line/test_create_batch_file.py
 ```
+
+For Stage 2, Phase 1 alone, run
+`uv run python -m pytest tests/file_parser/test_json_file_parser.py`.
 
 Include existing command-line tests when verifying that the shared CLI
 behavior is preserved. Documentation-only updates need no execution tests.

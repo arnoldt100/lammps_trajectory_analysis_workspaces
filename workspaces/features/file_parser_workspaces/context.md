@@ -2,13 +2,22 @@
 
 ## Status
 
-Stage 1, Phases 1 and 2 are approved. Phase 3 is implemented and verified,
-pending user review: the main function calls the parser and returns its
+Stage 1, all three phases are implemented, verified, and approved.
+The main function calls the parser and returns its
 `FileParserOptions`; the entry-point guard invokes main. Help, argument
 errors, and parsing-only invocation work inside and outside the repository.
 Five options tests, thirty-seven parsing and invocation tests, and
 twenty-one existing CLI tests pass (63 total).
-Stage 1 performs no source/output file I/O. JSON conversion is not implemented.
+Stage 2, Phase 1 is approved.
+The JSON module validates replacement maps and renders template text in
+memory, with 49 focused tests. Phase 2 is implemented and verified, pending
+user review: `create_output_file(options)` reads UTF-8 sources, validates
+and encodes the complete result before exclusive output creation, preserves
+line endings, and removes incomplete output after write or close failures.
+Cleanup failures report both the original failure and cleanup failure.
+There are 41 additional file-handling tests; all 153 file-parser and CLI
+tests pass. CLI conversion integration is not implemented; the standalone
+command still performs parsing only.
 
 ## Purpose
 
@@ -41,13 +50,12 @@ Keep command-line handling separate from reusable file-conversion logic.
 - Validate the template and JSON before creating output.
 - Implement in two stages: standalone command-line parsing first, then
   passing the options dataclass to the JSON file module for conversion.
-- Implement Stage 1 in phases, stopping for user review and approval after
-  each completed phase before starting the next.
+- Implement both stages in phases, stopping for user review and approval
+  after each completed phase before starting the next.
 
 ## Next Implementation Work
 
-Await Phase 3 review and approval. Stage 2 requires a separate implementation
-request and follows [the implementation plan](top_level_plan.md). It
-implements the JSON file module, passes the returned dataclass to it, and
-verifies library and end-to-end CLI behavior.
+Await Stage 2, Phase 2 review and approval. Phase 3 integrates conversion
+into the CLI and updates usage documentation. Follow
+[the implementation plan](top_level_plan.md).
 Neither stage changes the existing analysis CLI.
