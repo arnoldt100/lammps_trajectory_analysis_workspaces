@@ -296,7 +296,7 @@ def test_standalone_script_generates_expected_output(
         + b"echo __JOB__ __TIME__" + suffix
     )
     paths[2].write_text(
-        '{"__JOB__": "analysis", "__TIME__": "01:00:00"}', encoding="utf-8"
+        'data = {"JOB": "analysis", "TIME": "01:00:00"}', encoding="utf-8"
     )
     result = run_script(
         [
@@ -385,7 +385,7 @@ def test_standalone_script_leaves_existing_files_unchanged(tmp_path):
     contents = {
         "template.slurm": b"__JOB_NAME__",
         "batch.slurm": b"existing output",
-        "replacements.json": b'{"__JOB_NAME__": "analysis"}',
+        "replacements.json": b'data = {"JOB_NAME": "analysis"}',
     }
     for name, content in contents.items():
         (tmp_path / name).write_bytes(content)
@@ -434,28 +434,28 @@ def test_standalone_script_reports_conversion_failures(
     json_path = tmp_path / "replacements.json"
     output_path = tmp_path / "batch.slurm"
     input_path.write_bytes(b"__JOB__")
-    json_path.write_bytes(b'{"__JOB__": "analysis"}')
+    json_path.write_bytes(b'data = {"JOB": "analysis"}')
 
     if failure == "missing-input":
         input_path.unlink()
     elif failure == "missing-json":
         json_path.unlink()
     elif failure == "invalid-json":
-        json_path.write_bytes(b"{")
+        json_path.write_bytes(b"data = {")
     elif failure == "non-object-json":
-        json_path.write_bytes(b"[]")
+        json_path.write_bytes(b"data = []")
     elif failure == "invalid-key":
-        json_path.write_bytes(b'{"JOB": "analysis"}')
+        json_path.write_bytes(b'data = {"JOB_": "analysis"}')
     elif failure == "non-string-value":
-        json_path.write_bytes(b'{"__JOB__": 42}')
+        json_path.write_bytes(b'data = {"JOB": 42}')
     elif failure == "missing-replacement":
-        json_path.write_bytes(b"{}")
+        json_path.write_bytes(b"data = {}")
     elif failure == "invalid-utf8-input":
         input_path.write_bytes(b"\xff")
     elif failure == "invalid-utf8-json":
         json_path.write_bytes(b"\xff")
     elif failure == "invalid-utf8-output":
-        json_path.write_bytes(b'{"__JOB__": "\\ud800"}')
+        json_path.write_bytes(b'data = {"JOB": "\\ud800"}')
     elif failure == "missing-parent":
         output_path = tmp_path / "missing" / "batch.slurm"
     elif failure == "output-symlink":
@@ -496,7 +496,7 @@ def test_standalone_script_reports_conversion_failures(
 
 def test_standalone_script_resolves_relative_paths_from_working_directory(tmp_path):
     (tmp_path / "template.slurm").write_bytes(b"__JOB__")
-    (tmp_path / "replacements.json").write_bytes(b'{"__JOB__": "analysis"}')
+    (tmp_path / "replacements.json").write_bytes(b'data = {"JOB": "analysis"}')
 
     result = run_script(
         [

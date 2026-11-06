@@ -17,8 +17,8 @@ conversion errors (`OSError` and `ValueError`, including JSON and Unicode
 errors) produce concise stderr diagnostics and exit status 1. Unexpected
 errors propagate. Help and successful conversion exit with status 0;
 argument errors exit with status 2. Usage documentation describes conversion.
-All 182 file-parser and CLI tests pass, including standalone invocation
-inside and outside the repository.
+The original implementation was verified with 182 file-parser and CLI
+tests, including standalone invocation inside and outside the repository.
 
 ## Purpose
 
@@ -40,10 +40,10 @@ Keep command-line handling separate from reusable file-conversion logic.
 - Define the dataclass in its own `file_parser.file_parser_options` module,
   and re-export it from the package, not from the script.
   Pass the returned object directly to `json_file_parser.create_output_file`.
-- Replacement files may contain `data =` followed by a JSON object with
+- Replacement files must contain `data =` followed by a JSON object with
   undelimited, case-sensitive keys such as `"jobname"` for `__jobname__`.
-  Standalone JSON objects remain supported with fully delimited keys, for
-  example `{"__JOB_NAME__": "analysis"}`.
+  The object is checked against the bundled JSON Schema; standalone JSON
+  objects are rejected.
 - Match placeholders independently, rather than using the greedy
   `__(.*)__` literally.
 - Values are strings; substitution is literal and single-pass.
@@ -58,7 +58,9 @@ Keep command-line handling separate from reusable file-conversion logic.
 
 ## Next Implementation Work
 
-Both stages and all review phases are implemented, verified, and approved.
-No further implementation phase is planned. See
+The original stages are complete. Schema-checker phases 1–4 are implemented:
+tests and documentation now describe the required `data =` prefix and schema
+validation, and all 218 file-parser and CLI tests pass. Phase 5 will verify
+the updated feature after review. See
 [the implementation plan](top_level_plan.md).
-Neither stage changes the existing analysis CLI.
+These changes do not affect the existing analysis CLI.

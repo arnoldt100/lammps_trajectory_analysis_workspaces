@@ -59,13 +59,16 @@ produces:
 echo "PC-9-ar_small_box"
 ```
 
-The `data =` prefix is followed by a JSON object, not executable Python:
-use JSON syntax and string values. Each key names a case-sensitive
+The required `data =` prefix is followed by a JSON object, not executable
+Python: use JSON syntax and string values. The object is validated against
+the bundled JSON Schema. Each key names a case-sensitive
 placeholder surrounded by double underscores, so `jobname` replaces
 `__jobname__`. Keys must be nonempty, cannot contain a newline or `__`,
 and cannot end in `_` (which would overlap the closing delimiter).
-For compatibility, a standalone JSON object is also accepted; its keys
-must already include the delimiters, e.g. `{"__JOB_NAME__": "analysis"}`.
+Standalone JSON objects are no longer accepted. To migrate a file such as
+`{"__JOB_NAME__": "analysis"}`, add the prefix and remove delimiters from
+the keys: `data = {"JOB_NAME": "analysis"}`. Template placeholders do not
+need to change.
 Placeholders match `__(.*?)__` (without DOTALL). Missing replacements are
 errors; unused keys are allowed. Substitution is literal, single-pass, and
 non-recursive, with no shell expansion or job submission.

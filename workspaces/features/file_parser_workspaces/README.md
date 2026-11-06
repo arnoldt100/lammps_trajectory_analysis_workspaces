@@ -5,9 +5,9 @@
 Generate a Slurm batch file by replacing template placeholders with literal
 string values from a JSON file.
 
-Replacement files accept `data =` followed by a JSON object with undelimited
-keys, such as `"jobname"` for `__jobname__`. Standalone JSON objects with
-fully delimited keys remain supported.
+Replacement files require `data =` followed by a JSON object with undelimited
+keys, such as `"jobname"` for `__jobname__`. The object is checked against
+the bundled JSON Schema; standalone JSON objects are rejected.
 
 This ICM workspace tracks the plan and implementation status. Stage 1,
 all three phases are implemented, verified, and approved, including
@@ -17,8 +17,9 @@ tests pass, including existing CLI regression tests.
 Stage 2, Phase 1 adds in-memory JSON validation and literal template
 substitution, with 49 focused tests, and is approved. Phase 2 adds safe file
 handling with 41 additional tests and is approved. Phase 3 integrates CLI
-conversion and documents complete usage; it is approved. All 182
-file-parser and CLI tests pass.
+conversion and documents complete usage; it is approved. The original
+implementation passed 182 file-parser and CLI tests. The schema-checker
+update is proceeding through separate review phases.
 
 ## Implementation Stages
 
@@ -102,7 +103,7 @@ incomplete output; a cleanup failure explicitly reports both failures.
 
 - Inherits [project-wide rules](../../top_level_plan.md), including execution
   through `uv run`.
-- Uses the Python standard library; no new dependencies are planned.
+- Uses the `jsonschema` package to validate replacement objects.
 - The standalone script delegates conversion to the
   file-parser package.
 - This is not a new `ltaw.py` subcommand and does not change the existing

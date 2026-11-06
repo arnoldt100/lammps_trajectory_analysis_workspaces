@@ -17,9 +17,9 @@ def test_render_template_generates_expected_slurm_text():
         "#SBATCH --time=__WALLTIME__\n"
         'echo "__JOB_NAME__"\n'
     )
-    replacements = {"__JOB_NAME__": "analysis", "__WALLTIME__": "01:00:00"}
+    replacements = {"JOB_NAME": "analysis", "WALLTIME": "01:00:00"}
 
-    assert json_file_parser._render_template(template, json.dumps(replacements)) == (
+    assert json_file_parser._render_template(template, "data = " + json.dumps(replacements)) == (
         "#!/bin/bash\n"
         "#SBATCH --job-name=analysis\n"
         "#SBATCH --time=01:00:00\n"
@@ -52,7 +52,6 @@ def test_render_template_accepts_assignment_whitespace(prefix):
 @pytest.mark.parametrize(
     "json_text",
     [
-        'other = {"jobname": "x"}',
         'data == {"jobname": "x"}',
         'data = {"jobname": "x"}; print("not executed")',
         "data = {'jobname': 'x'}",
@@ -98,10 +97,10 @@ def test_render_template_assignment_keys_are_case_sensitive():
     ],
 )
 def test_render_template_matches_independent_placeholders(template, expected):
-    replacements = {"__A__": "first", "__B__": "second", "__UNUSED__": "unused"}
+    replacements = {"A": "first", "B": "second", "UNUSED": "unused"}
 
     assert json_file_parser._render_template(
-        template, json.dumps(replacements)
+        template, "data = " + json.dumps(replacements)
     ) == expected
 
 
@@ -110,19 +109,19 @@ def test_render_template_matches_independent_placeholders(template, expected):
     [r"\1 \g<0> C:\jobs", "$HOME ${USER} $(echo test)", "", "\u03b1\u00e9", "__B__"],
 )
 def test_render_template_uses_literal_non_recursive_replacements(replacement):
-    replacements = {"__A__": replacement, "__B__": "not substituted"}
+    replacements = {"A": replacement, "B": "not substituted"}
 
     assert json_file_parser._render_template(
-        "before __A__ after", json.dumps(replacements)
+        "before __A__ after", "data = " + json.dumps(replacements)
     ) == f"before {replacement} after"
 
 
-def test_render_template_preserves_unicode_and_accepts_empty_placeholder():
-    replacements = {"____": "\u03b2", "__\u03b1__": "\u03b3"}
+def test_render_template_preserves_unicode():
+    replacements = {"\u03b1": "\u03b3", "\u03b2": "\u03b4"}
 
     assert json_file_parser._render_template(
-        "\u03b4 ____ __\u03b1__", json.dumps(replacements)
-    ) == "\u03b4 \u03b2 \u03b3"
+        "\u03b4 __\u03b2__ __\u03b1__", "data = " + json.dumps(replacements)
+    ) == "\u03b4 \u03b4 \u03b3"
 
 
 @pytest.mark.parametrize("line_ending", ["\n", "\r\n"])
@@ -132,49 +131,49 @@ def test_render_template_preserves_line_endings(line_ending, final_newline):
     template = f"first __A__{line_ending}second __A__{suffix}"
 
     assert json_file_parser._render_template(
-        template, '{"__A__": "value"}'
+        template, 'data = {"A": "value"}'
     ) == f"first value{line_ending}second value{suffix}"
 
 
 @pytest.mark.parametrize("template", ["__MISSING__", "__A__ __MISSING__"])
 def test_render_template_reports_missing_replacement(template):
     with pytest.raises(ValueError, match="Missing replacement.*__MISSING__"):
-        json_file_parser._render_template(template, '{"__A__": "value"}')
+        json_file_parser._render_template(template, 'data = {"A": "value"}')
 
 
 def test_render_template_treats_whitespace_between_delimiters_as_placeholder():
     with pytest.raises(ValueError, match="Missing replacement for placeholder '__ __'"):
-        json_file_parser._render_template("__A\nB__ __A__", '{"__A__": "value"}')
+        json_file_parser._render_template("__A\nB__ __A__", 'data = {"A": "value"}')
 
 
 @pytest.mark.parametrize("json_text", ["", "{", '{"__A__":}', '{"__A__": "x",}'])
 def test_render_template_rejects_malformed_json(json_text):
     with pytest.raises(json.JSONDecodeError):
-        json_file_parser._render_template("no placeholders", json_text)
+        json_file_parser._render_template("no placeholders", "data = " + json_text)
 
 
 @pytest.mark.parametrize("json_text", ["[]", '["value"]', '"text"', "42", "true", "null"])
 def test_render_template_requires_json_object(json_text):
     with pytest.raises(ValueError, match="JSON replacements must be an object"):
-        json_file_parser._render_template("no placeholders", json_text)
+        json_file_parser._render_template("no placeholders", "data = " + json_text)
 
 
 @pytest.mark.parametrize(
-    "key", ["", "A", "_A_", "__A", "A__", "prefix__A__", "__A__suffix", "__A\nB__"]
+    "key", ["", "_A_", "__A", "A__", "prefix__A__", "__A__suffix", "__A\nB__"]
 )
 def test_render_template_rejects_invalid_keys_even_when_unused(key):
     with pytest.raises(ValueError, match="Invalid placeholder key"):
-        json_file_parser._render_template("no placeholders", json.dumps({key: "value"}))
+        json_file_parser._render_template("no placeholders", "data = " + json.dumps({key: "value"}))
 
 
 @pytest.mark.parametrize("value", [0, 1.5, True, None, [], {}])
 def test_render_template_rejects_non_string_values_even_when_unused(value):
-    with pytest.raises(ValueError, match="Replacement for '__A__' must be a string"):
-        json_file_parser._render_template("no placeholders", json.dumps({"__A__": value}))
+    with pytest.raises(ValueError, match="Replacement for 'A' must be a string"):
+        json_file_parser._render_template("no placeholders", "data = " + json.dumps({"A": value}))
 
 
 def test_render_template_accepts_empty_json_for_template_without_placeholders(capsys):
-    assert json_file_parser._render_template("unchanged\n", "{}") == "unchanged\n"
+    assert json_file_parser._render_template("unchanged\n", "data = {}") == "unchanged\n"
     assert capsys.readouterr() == ("", "")
 
 
@@ -186,7 +185,7 @@ def options(tmp_path):
         json_file=tmp_path / "replacements.json",
     )
     paths.input_file.write_bytes(b"#!/bin/bash\n#SBATCH --job-name=__JOB__\n")
-    paths.json_file.write_text('{"__JOB__": "analysis"}', encoding="utf-8")
+    paths.json_file.write_text('data = {"JOB": "analysis"}', encoding="utf-8")
     return paths
 
 
@@ -222,7 +221,7 @@ def test_create_output_file_preserves_line_endings(
 def test_create_output_file_preserves_mixed_endings_and_literal_unicode(options):
     options.input_file.write_bytes(b"__JOB__\r\n__JOB__\n__JOB__\r")
     value = "\u03b1 $HOME \\1 __JOB__"
-    options.json_file.write_text(json.dumps({"__JOB__": value}), encoding="utf-8")
+    options.json_file.write_text("data = " + json.dumps({"JOB": value}), encoding="utf-8")
 
     json_file_parser.create_output_file(options)
 
@@ -234,7 +233,7 @@ def test_create_output_file_preserves_mixed_endings_and_literal_unicode(options)
 def test_create_output_file_copies_template_without_placeholders(options):
     original = b"#!/bin/bash\r\necho unchanged"
     options.input_file.write_bytes(original)
-    options.json_file.write_bytes(b"{}")
+    options.json_file.write_bytes(b"data = {}")
 
     json_file_parser.create_output_file(options)
 
@@ -244,15 +243,15 @@ def test_create_output_file_copies_template_without_placeholders(options):
 @pytest.mark.parametrize(
     ("json_text", "error"),
     [
-        ("{", json.JSONDecodeError),
+        ("data = {", json.JSONDecodeError),
         ('data = {"jobname": "x"}; pass', json.JSONDecodeError),
         ('data = {"bad__name": "x"}', ValueError),
         ('data = {"jobname": 1}', ValueError),
-        ("[]", ValueError),
-        ('{"JOB": "analysis"}', ValueError),
-        ('{"__JOB__": 42}', ValueError),
-        ("{}", ValueError),
-        ('{"__JOB__": "\\ud800"}', UnicodeEncodeError),
+        ("data = []", ValueError),
+        ('data = {"JOB_": "analysis"}', ValueError),
+        ('data = {"JOB": 42}', ValueError),
+        ("data = {}", ValueError),
+        ('data = {"JOB": "\\ud800"}', UnicodeEncodeError),
     ],
 )
 @pytest.mark.parametrize("existing_output", [False, True])

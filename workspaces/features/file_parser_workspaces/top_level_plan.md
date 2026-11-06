@@ -124,15 +124,15 @@ data = {
 }
 ```
 
-- `data =` is followed by a JSON object, not executable Python. Its keys
+- `data =` is required and is followed by a JSON object, not executable Python. Its keys
   are case-sensitive placeholder names without delimiters, must be nonempty,
   cannot contain `__` or a newline, and cannot end in `_`. Values must be
   strings.
-- Standalone JSON objects remain supported with fully delimited placeholder
-  keys. Reject invalid key shapes and non-string values without coercion.
+- Validate the object against the bundled JSON Schema. Reject standalone
+  JSON, invalid key shapes, and non-string values without coercion.
 - Interpret placeholders using the non-greedy pattern `__(.*?)__`, without
   DOTALL, so multiple placeholders on a line are independent and matches do
-  not span lines. Standalone JSON keys must fully match this syntax.
+  not span lines.
 - Each occurrence is replaced, including repeated placeholders.
 - A matched placeholder missing from JSON is an error. Validate all matches
   before creating output.
