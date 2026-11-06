@@ -5,8 +5,10 @@
 Generate a Slurm batch file by replacing template placeholders with literal
 string values from a JSON file.
 
-This ICM workspace contains planning documents only. Implementation and
-tests are not yet created for this feature.
+This ICM workspace tracks the plan and implementation status. Stage 1,
+Phase 1 adds the shared `FileParserOptions` dataclass and five passing
+contract tests; it is pending user review. Parsing and conversion are not
+yet implemented.
 
 ## Implementation Stages
 
@@ -26,12 +28,16 @@ Planned production files:
   `parse_command_line_arguments` returning `FileParserOptions`, delegation,
   and user-facing errors.
 - `src/lammps_trajectory_analysis_workspaces/file_parser/__init__.py`:
-  package boundary and shared `FileParserOptions` dataclass.
+  package boundary and re-export of `FileParserOptions`.
+- `src/lammps_trajectory_analysis_workspaces/file_parser/file_parser_options.py`:
+  shared `FileParserOptions` dataclass.
 - `src/lammps_trajectory_analysis_workspaces/file_parser/json_file_parser.py`:
   JSON validation, template substitution, and output-file creation.
 
 Planned tests:
 
+- `tests/file_parser/test_file_parser_options.py`: shared options contract
+  (implemented in Stage 1, Phase 1).
 - `tests/file_parser/`: replacement behavior, validation, and file handling.
 - `tests/command_line/test_create_batch_file.py`: standalone command behavior.
 

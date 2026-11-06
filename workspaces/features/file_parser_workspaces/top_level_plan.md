@@ -1,8 +1,8 @@
 # Top-Level Plan - File Parser
 
 This feature inherits the [project-wide rules](../../top_level_plan.md).
-This document defines the planned contract; it does not claim that the
-implementation exists.
+This document defines the planned contract. See [current context](context.md)
+for verified implementation status.
 
 ## Objective
 
@@ -40,16 +40,18 @@ scripts/
 src/lammps_trajectory_analysis_workspaces/
   file_parser/
     __init__.py
+    file_parser_options.py
     json_file_parser.py
 tests/
   file_parser/
+    test_file_parser_options.py
     test_json_file_parser.py
   command_line/
     test_create_batch_file.py
 ```
 
 Define the shared options dataclass in
-`lammps_trajectory_analysis_workspaces.file_parser.__init__` so the script
+`lammps_trajectory_analysis_workspaces.file_parser.file_parser_options` so the script
 and conversion module can import it without the library importing the
 entry-point script:
 
@@ -62,6 +64,8 @@ class FileParserOptions:
 ```
 
 The fields above are required `Path` values with no defaults.
+Re-export `FileParserOptions` from the `file_parser` package for convenient
+shared imports.
 
 The standalone script defines the parsing function:
 
@@ -159,10 +163,20 @@ Example JSON:
 
 ## Implementation Sequence
 
-Implementation is divided into two stages. Neither stage is authorized by
-this planning-only update.
+Implementation is divided into two stages. Stage 1 is authorized in
+reviewable phases; Stage 2 awaits a separate implementation request.
 
 ### Stage 1 - Command-Line Parsing
+
+Review phases:
+
+1. Shared `FileParserOptions` dataclass and focused contract tests.
+2. Parsing function and focused argument-parsing tests.
+3. Main-function and entry-point wiring, standalone invocation tests, and
+   parsing-only usage documentation.
+
+Stop after each completed phase for user review and approval before
+starting the next phase.
 
 1. Add the `file_parser` package with the shared `FileParserOptions`
    dataclass. Implement `parse_command_line_arguments` in the standalone
@@ -256,8 +270,11 @@ Run the smallest relevant test selection through `uv run`.
 For Stage 1:
 
 ```text
-uv run python -m pytest tests/command_line/test_create_batch_file.py
+uv run python -m pytest tests/file_parser/test_file_parser_options.py tests/command_line/test_create_batch_file.py
 ```
+
+For Phase 1 alone, run only `tests/file_parser/test_file_parser_options.py`.
+Add the CLI selection once its test file exists in Phase 2.
 
 For Stage 2:
 
@@ -266,5 +283,4 @@ uv run python -m pytest tests/file_parser tests/command_line/test_create_batch_f
 ```
 
 Include existing command-line tests when verifying that the shared CLI
-behavior is preserved. No execution tests are needed for this planning-only
-change.
+behavior is preserved. Documentation-only updates need no execution tests.
