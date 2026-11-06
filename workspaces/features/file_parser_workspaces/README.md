@@ -6,10 +6,10 @@ Generate a Slurm batch file by replacing template placeholders with literal
 string values from a JSON file.
 
 This ICM workspace tracks the plan and implementation status. Stage 1,
-Phase 1 is approved. Phase 2 adds the parsing function and seventeen passing
-parsing tests; it is pending user review. The five options tests and
-twenty-one existing CLI tests also pass. Standalone invocation and
-conversion are not yet implemented.
+Phases 1 and 2 are approved. Phase 3 wires standalone invocation and
+documents parsing-only usage; it is pending user review. All 63 relevant
+tests pass, including existing CLI regression tests. JSON conversion is not
+yet implemented.
 
 ## Implementation Stages
 
@@ -41,18 +41,20 @@ Planned tests:
   (implemented in Stage 1, Phase 1).
 - `tests/file_parser/`: replacement behavior, validation, and file handling.
 - `tests/command_line/test_create_batch_file.py`: parsing contract
-  (implemented in Stage 1, Phase 2) and planned standalone command behavior.
+  and standalone command behavior (implemented in Stage 1, Phases 2 and 3).
 
 The existing [`scripts/create_batch_file.py`](../../../scripts/create_batch_file.py)
-contains the parsing function, but its main function and entry-point guard
-are still stubs pending Phase 3.
+parses arguments through its main function and entry-point guard. It does
+not read source files, validate JSON, or create output. See the
+[project README](../../../README.md) for parsing-only usage and limitations.
 
 ## Dependencies and Relationships
 
 - Inherits [project-wide rules](../../top_level_plan.md), including execution
   through `uv run`.
 - Uses the Python standard library; no new dependencies are planned.
-- The standalone script delegates conversion to the file-parser package.
+- Stage 2 will delegate conversion from the standalone script to the
+  file-parser package.
 - This is not a new `ltaw.py` subcommand and does not change the existing
   shared CLI dispatcher.
 - Slurm submission, scheduling, and batch-script semantic validation are

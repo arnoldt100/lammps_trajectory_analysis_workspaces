@@ -176,6 +176,9 @@ Review phases:
 3. Main-function and entry-point wiring, standalone invocation tests, and
    parsing-only usage documentation.
 
+Phase 3 is implemented and verified, pending user review. See
+[current context](context.md) for verification results.
+
 Stop after each completed phase for user review and approval before
 starting the next phase.
 
@@ -190,6 +193,9 @@ starting the next phase.
    conversion module.
 3. Fix the entry-point guard to invoke the main function. Provide standard
    argparse help, missing-option diagnostics, and unknown-option diagnostics.
+   During Stage 1, main returns the parsed options for programmatic use;
+   the guard calls main without passing that object to `sys.exit`.
+   Help explicitly identifies the parsing-only limitation.
 4. Add focused parsing and standalone invocation tests, including invocation
    outside the repository working directory.
 5. Document the parsing-only milestone and its limitations. A valid

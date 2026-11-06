@@ -2,12 +2,13 @@
 
 ## Status
 
-Stage 1, Phase 1 is approved. Phase 2 is implemented and verified, pending
-user review: the script's `parse_command_line_arguments` function returns
-the shared `FileParserOptions` dataclass. Five options tests, seventeen
-parsing tests, and twenty-one existing CLI tests pass (43 total).
-The main function and entry-point guard remain unwired until Phase 3.
-JSON conversion is not implemented.
+Stage 1, Phases 1 and 2 are approved. Phase 3 is implemented and verified,
+pending user review: the main function calls the parser and returns its
+`FileParserOptions`; the entry-point guard invokes main. Help, argument
+errors, and parsing-only invocation work inside and outside the repository.
+Five options tests, thirty-seven parsing and invocation tests, and
+twenty-one existing CLI tests pass (63 total).
+Stage 1 performs no source/output file I/O. JSON conversion is not implemented.
 
 ## Purpose
 
@@ -45,9 +46,8 @@ Keep command-line handling separate from reusable file-conversion logic.
 
 ## Next Implementation Work
 
-Follow [the implementation plan](top_level_plan.md). After Phase 2 approval,
-Phase 3 wires standalone invocation, verifies CLI
-behavior, and documents the parsing-only milestone. Stage 2
+Await Phase 3 review and approval. Stage 2 requires a separate implementation
+request and follows [the implementation plan](top_level_plan.md). It
 implements the JSON file module, passes the returned dataclass to it, and
 verifies library and end-to-end CLI behavior.
 Neither stage changes the existing analysis CLI.

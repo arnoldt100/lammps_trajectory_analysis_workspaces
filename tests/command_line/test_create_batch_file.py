@@ -1,4 +1,5 @@
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 
@@ -146,3 +147,126 @@ def test_parser_preserves_paths_without_file_io(
     assert options == FileParserOptions(*paths)
     assert list(tmp_path.iterdir()) == []
     assert capsys.readouterr() == ("", "")
+
+
+def test_main_returns_parsed_options(batch_file_script, monkeypatch):
+    options = FileParserOptions(
+        Path("template.slurm"), Path("batch.slurm"), Path("replacements.json")
+    )
+    calls = []
+
+    def fake_parse():
+        calls.append(True)
+        return options
+
+    monkeypatch.setattr(batch_file_script, "parse_command_line_arguments", fake_parse)
+
+    assert batch_file_script._main() is options
+    assert calls == [True]
+
+
+@pytest.fixture(params=["repository", "external"])
+def invocation_directory(request, tmp_path):
+    if request.param == "repository":
+        return Path(__file__).parents[2]
+    return tmp_path
+
+
+def run_script(arguments, working_directory):
+    script_path = Path(__file__).parents[2] / "scripts" / "create_batch_file.py"
+    return subprocess.run(
+        [sys.executable, "-I", str(script_path), *arguments],
+        cwd=working_directory,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+
+@pytest.mark.parametrize("help_option", ["-h", "--help"])
+def test_standalone_script_displays_help(help_option, invocation_directory):
+    result = run_script([help_option], invocation_directory)
+
+    assert result.returncode == 0
+    assert result.stderr == ""
+    assert "usage:" in result.stdout
+    assert "-h, --help" in result.stdout
+    assert "--input-file INPUT_FILE" in result.stdout
+    assert "--output-file OUTPUT_FILE" in result.stdout
+    assert "--json-file JSON_FILE" in result.stdout
+    assert "Currently parses arguments only" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("omitted_option", "extra_arguments", "diagnostic"),
+    [
+        ("all", [], "required"),
+        ("--input-file", [], "--input-file"),
+        ("--output-file", [], "--output-file"),
+        ("--json-file", [], "--json-file"),
+        (None, ["--unknown"], "unrecognized arguments"),
+        (None, ["--input", "other.slurm"], "unrecognized arguments"),
+    ],
+)
+def test_standalone_script_reports_argument_errors(
+    arguments, invocation_directory, omitted_option, extra_arguments, diagnostic,
+):
+    if omitted_option == "all":
+        arguments = []
+    elif omitted_option is not None:
+        index = arguments.index(omitted_option)
+        del arguments[index:index + 2]
+
+    result = run_script([*arguments, *extra_arguments], invocation_directory)
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert diagnostic in result.stderr
+
+
+def test_standalone_script_parses_without_creating_files(
+    invocation_directory, tmp_path,
+):
+    paths = [
+        tmp_path / "missing template.slurm",
+        tmp_path / "batch.slurm",
+        tmp_path / "missing.json",
+    ]
+    result = run_script(
+        [
+            "--input-file", str(paths[0]),
+            "--output-file", str(paths[1]),
+            "--json-file", str(paths[2]),
+        ],
+        invocation_directory,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_standalone_script_leaves_existing_files_unchanged(tmp_path):
+    contents = {
+        "template.slurm": b"\xff__JOB_NAME__",
+        "batch.slurm": b"existing output",
+        "replacements.json": b"not valid JSON",
+    }
+    for name, content in contents.items():
+        (tmp_path / name).write_bytes(content)
+
+    result = run_script(
+        [
+            "--input-file", "template.slurm",
+            "--output-file", "batch.slurm",
+            "--json-file", "replacements.json",
+        ],
+        tmp_path,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+    assert {path.name: path.read_bytes() for path in tmp_path.iterdir()} == contents

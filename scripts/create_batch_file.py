@@ -18,6 +18,10 @@ def parse_command_line_arguments(
     """Parse paths for batch-file generation without reading or writing files."""
     parser = argparse.ArgumentParser(
         description="Generate a Slurm batch file from a template and JSON replacements.",
+        epilog=(
+            "Currently parses arguments only; no files are read or written. "
+            "JSON conversion will be added in Stage 2."
+        ),
         allow_abbrev=False,
     )
     parser.add_argument(
@@ -38,8 +42,9 @@ def parse_command_line_arguments(
     )
 
 
-def _main():
-    ...
+def _main() -> FileParserOptions:
+    return parse_command_line_arguments()
+
 
 if __name__ == "__main__":
-    _main 
+    _main()
