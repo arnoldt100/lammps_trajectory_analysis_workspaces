@@ -2,10 +2,12 @@
 
 ## Status
 
-Stage 1, Phase 1 is implemented and verified, pending user review:
-the shared `FileParserOptions` dataclass and five focused tests are present.
-The existing batch-file script remains a stub. Command-line parsing and
-JSON conversion are not implemented.
+Stage 1, Phase 1 is approved. Phase 2 is implemented and verified, pending
+user review: the script's `parse_command_line_arguments` function returns
+the shared `FileParserOptions` dataclass. Five options tests, seventeen
+parsing tests, and twenty-one existing CLI tests pass (43 total).
+The main function and entry-point guard remain unwired until Phase 3.
+JSON conversion is not implemented.
 
 ## Purpose
 
@@ -19,6 +21,8 @@ Keep command-line handling separate from reusable file-conversion logic.
   spellings were typographical errors.
 - The standalone script requires `--input-file`, `--output-file`, and
   `--json-file`.
+- Reject abbreviated option names as unknown arguments rather than using
+  argparse's optional prefix matching.
 - `parse_command_line_arguments` lives in the standalone script and returns
   a shared `FileParserOptions` dataclass with three required `Path` fields:
   `input_file`, `output_file`, and `json_file`.
@@ -41,9 +45,8 @@ Keep command-line handling separate from reusable file-conversion logic.
 
 ## Next Implementation Work
 
-Follow [the implementation plan](top_level_plan.md). After Phase 1 approval,
-Phase 2 implements the parsing function and its focused tests. After
-Phase 2 approval, Phase 3 wires standalone invocation, verifies CLI
+Follow [the implementation plan](top_level_plan.md). After Phase 2 approval,
+Phase 3 wires standalone invocation, verifies CLI
 behavior, and documents the parsing-only milestone. Stage 2
 implements the JSON file module, passes the returned dataclass to it, and
 verifies library and end-to-end CLI behavior.

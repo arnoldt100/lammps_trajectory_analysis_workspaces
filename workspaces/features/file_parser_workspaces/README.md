@@ -6,9 +6,10 @@ Generate a Slurm batch file by replacing template placeholders with literal
 string values from a JSON file.
 
 This ICM workspace tracks the plan and implementation status. Stage 1,
-Phase 1 adds the shared `FileParserOptions` dataclass and five passing
-contract tests; it is pending user review. Parsing and conversion are not
-yet implemented.
+Phase 1 is approved. Phase 2 adds the parsing function and seventeen passing
+parsing tests; it is pending user review. The five options tests and
+twenty-one existing CLI tests also pass. Standalone invocation and
+conversion are not yet implemented.
 
 ## Implementation Stages
 
@@ -39,10 +40,12 @@ Planned tests:
 - `tests/file_parser/test_file_parser_options.py`: shared options contract
   (implemented in Stage 1, Phase 1).
 - `tests/file_parser/`: replacement behavior, validation, and file handling.
-- `tests/command_line/test_create_batch_file.py`: standalone command behavior.
+- `tests/command_line/test_create_batch_file.py`: parsing contract
+  (implemented in Stage 1, Phase 2) and planned standalone command behavior.
 
 The existing [`scripts/create_batch_file.py`](../../../scripts/create_batch_file.py)
-is a stub, not a working implementation.
+contains the parsing function, but its main function and entry-point guard
+are still stubs pending Phase 3.
 
 ## Dependencies and Relationships
 

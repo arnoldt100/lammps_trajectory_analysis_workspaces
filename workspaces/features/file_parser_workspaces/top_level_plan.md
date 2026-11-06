@@ -23,6 +23,7 @@ uv run "$LTAW_TOP_LEVEL/scripts/create_batch_file.py" \
 - Relative paths are relative to the process working directory.
 - Missing required options and unknown options use standard argparse
   diagnostics and exit status 2.
+- Option names must be supplied in full; disable argparse abbreviation.
 - Conversion succeeds with exit status 0.
 - Invalid JSON, invalid replacements, missing input files, an existing
   output path, and other conversion or I/O failures produce an explicit
@@ -274,7 +275,7 @@ uv run python -m pytest tests/file_parser/test_file_parser_options.py tests/comm
 ```
 
 For Phase 1 alone, run only `tests/file_parser/test_file_parser_options.py`.
-Add the CLI selection once its test file exists in Phase 2.
+The CLI test file is present as of Phase 2.
 
 For Stage 2:
 
