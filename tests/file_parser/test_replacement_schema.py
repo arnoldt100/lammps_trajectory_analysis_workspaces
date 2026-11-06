@@ -41,3 +41,18 @@ def test_assignment_requires_valid_key(key):
 def test_assignment_requires_strict_json(text):
     with pytest.raises(json.JSONDecodeError):
         json_file_parser._render_template("", text)
+
+
+@pytest.mark.parametrize(
+    ("text", "diagnostic"),
+    [
+        ('{"jobname": "x"}', "Replacement file must start with 'data ='"),
+        ("data = []", "JSON replacements must be an object"),
+        ('data = {"bad__name": "x"}', "Invalid placeholder key: 'bad__name'"),
+        ('data = {"jobname": 1}', "Replacement for 'jobname' must be a string"),
+    ],
+)
+def test_assignment_validation_reports_actionable_error(text, diagnostic):
+    with pytest.raises(ValueError) as exc_info:
+        json_file_parser._render_template("", text)
+    assert diagnostic in str(exc_info.value)

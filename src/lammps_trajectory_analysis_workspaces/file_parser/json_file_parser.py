@@ -2,6 +2,9 @@
 
 import json
 import re
+from importlib.resources import files
+
+from jsonschema import Draft202012Validator
 
 from lammps_trajectory_analysis_workspaces.file_parser.file_parser_options import (
     FileParserOptions,
@@ -10,34 +13,35 @@ from lammps_trajectory_analysis_workspaces.file_parser.file_parser_options impor
 
 _PLACEHOLDER = re.compile(r"__(.*?)__")
 _DATA_ASSIGNMENT = re.compile(r"\s*data\s*=\s*")
+_SCHEMA = json.loads(
+    files(__package__).joinpath("replacements.schema.json").read_text(encoding="utf-8")
+)
+Draft202012Validator.check_schema(_SCHEMA)
+_VALIDATOR = Draft202012Validator(_SCHEMA)
 
 
 def _render_template(template: str, json_text: str) -> str:
     """Apply validated JSON replacements literally, without file I/O."""
     assignment = _DATA_ASSIGNMENT.match(json_text)
-    decoded: object = json.loads(json_text[assignment.end():] if assignment else json_text)
-    if not isinstance(decoded, dict):
-        raise ValueError("JSON replacements must be an object")
-
-    replacements: dict[str, str] = {}
-    for key, value in decoded.items():
-        if assignment:
-            if (
-                not isinstance(key, str)
-                or not key
-                or key.endswith("_")
-                or "__" in key
-                or "\n" in key
-            ):
-                raise ValueError(f"Invalid placeholder key: {key!r}")
-            placeholder = f"__{key}__"
+    if assignment is None:
+        raise ValueError("Replacement file must start with 'data ='")
+    decoded = json.loads(json_text[assignment.end():])
+    error = next(_VALIDATOR.iter_errors(decoded), None)
+    if error is not None:
+        schema_path = tuple(error.absolute_schema_path)
+        if schema_path == ("type",):
+            detail = "JSON replacements must be an object"
+        elif schema_path[0] == "propertyNames":
+            detail = f"Invalid placeholder key: {error.instance!r}"
+        elif schema_path == ("additionalProperties", "type") and error.absolute_path:
+            detail = f"Replacement for {error.absolute_path[0]!r} must be a string"
         else:
-            if not isinstance(key, str) or _PLACEHOLDER.fullmatch(key) is None:
-                raise ValueError(f"Invalid placeholder key: {key!r}")
-            placeholder = key
-        if not isinstance(value, str):
-            raise ValueError(f"Replacement for {key!r} must be a string")
-        replacements[placeholder] = value
+            detail = error.message
+        raise ValueError(f"Invalid JSON replacements: {detail}") from error
+
+    replacements: dict[str, str] = {
+        f"__{key}__": value for key, value in decoded.items()
+    }
 
     def replace(match: re.Match[str]) -> str:
         placeholder = match.group(0)

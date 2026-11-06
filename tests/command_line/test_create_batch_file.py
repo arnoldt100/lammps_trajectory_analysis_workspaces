@@ -338,6 +338,49 @@ def test_standalone_script_accepts_data_assignment(tmp_path, invocation_director
     assert output.read_text(encoding="utf-8") == "#SBATCH --job-name=PC-9-ar_small_box\n"
 
 
+@pytest.mark.parametrize(
+    ("text", "diagnostic"),
+    [
+        ('{"jobname": "x"}', "Replacement file must start with 'data ='"),
+        ('data = {"jobname": }', "Expecting value"),
+        ("data = []", "JSON replacements must be an object"),
+        ('data = {"bad__name": "x"}', "Invalid placeholder key: 'bad__name'"),
+        ('data = {"jobname": 1}', "Replacement for 'jobname' must be a string"),
+    ],
+)
+@pytest.mark.parametrize("existing_output", [False, True])
+def test_standalone_script_reports_schema_errors_without_touching_output(
+    tmp_path, text, diagnostic, existing_output,
+):
+    template = tmp_path / "template.slurm"
+    output = tmp_path / "batch.slurm"
+    replacements = tmp_path / "replacements.json"
+    template.write_text("__jobname__", encoding="utf-8")
+    replacements.write_text(text, encoding="utf-8")
+    if existing_output:
+        output.write_bytes(b"existing output")
+
+    result = run_script(
+        [
+            "--input-file", str(template),
+            "--output-file", str(output),
+            "--json-file", str(replacements),
+        ],
+        tmp_path,
+    )
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert diagnostic in result.stderr
+    assert "Traceback" not in result.stderr
+    assert template.read_text(encoding="utf-8") == "__jobname__"
+    assert replacements.read_text(encoding="utf-8") == text
+    if existing_output:
+        assert output.read_bytes() == b"existing output"
+    else:
+        assert not output.exists()
+
+
 def test_standalone_script_leaves_existing_files_unchanged(tmp_path):
     contents = {
         "template.slurm": b"__JOB_NAME__",

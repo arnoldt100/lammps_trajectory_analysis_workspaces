@@ -1192,11 +1192,15 @@ name = "lammps-trajectory-analysis-workspaces"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "jsonschema" },
     { name = "lammps-trajectory-analysis-tools" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "lammps-trajectory-analysis-tools", editable = "../lammps_trajectory_analysis_tools" }]
+requires-dist = [
+    { name = "jsonschema", specifier = ">=4.26,<5" },
+    { name = "lammps-trajectory-analysis-tools", editable = "../lammps_trajectory_analysis_tools" },
+]
 
 [[package]]
 name = "lark"
