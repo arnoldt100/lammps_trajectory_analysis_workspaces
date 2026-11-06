@@ -19,7 +19,8 @@ substitution, with 49 focused tests, and is approved. Phase 2 adds safe file
 handling with 41 additional tests and is approved. Phase 3 integrates CLI
 conversion and documents complete usage; it is approved. The original
 implementation passed 182 file-parser and CLI tests. The schema-checker
-update is proceeding through separate review phases.
+update is implemented and verified with 239 file-parser and command-line
+tests, and awaits final review and approval.
 
 ## Implementation Stages
 

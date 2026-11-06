@@ -19,6 +19,11 @@ errors propagate. Help and successful conversion exit with status 0;
 argument errors exit with status 2. Usage documentation describes conversion.
 The original implementation was verified with 182 file-parser and CLI
 tests, including standalone invocation inside and outside the repository.
+The schema-checker update is verified: all 239 file-parser and
+command-line tests pass, and standalone invocation inside and outside
+the repository produces the expected output, rejects standalone JSON
+and invalid keys with exit status 1 and no output, and never
+overwrites existing output.
 
 ## Purpose
 
@@ -58,9 +63,10 @@ Keep command-line handling separate from reusable file-conversion logic.
 
 ## Next Implementation Work
 
-The original stages are complete. Schema-checker phases 1–4 are implemented:
-tests and documentation now describe the required `data =` prefix and schema
-validation, and all 218 file-parser and CLI tests pass. Phase 5 will verify
-the updated feature after review. See
-[the implementation plan](top_level_plan.md).
+The original stages are complete. All five schema-checker phases are
+implemented and verified: tests and documentation describe the required
+`data =` prefix and schema validation, all 239 file-parser and
+command-line tests pass, and standalone invocation was verified inside
+and outside the repository. The update awaits final review and approval.
+See [the implementation plan](top_level_plan.md).
 These changes do not affect the existing analysis CLI.
