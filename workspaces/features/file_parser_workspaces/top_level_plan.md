@@ -48,26 +48,56 @@ tests/
     test_create_batch_file.py
 ```
 
-The proposed callable is:
+Define the shared options dataclass in
+`lammps_trajectory_analysis_workspaces.file_parser.__init__` so the script
+and conversion module can import it without the library importing the
+entry-point script:
 
 ```python
-create_output_file(
-    input_file: Path,
-    output_file: Path,
-    json_file: Path,
-) -> None
+@dataclass
+class FileParserOptions:
+    input_file: Path
+    output_file: Path
+    json_file: Path
+```
+
+The fields above are required `Path` values with no defaults.
+
+The standalone script defines the parsing function:
+
+```python
+def parse_command_line_arguments(
+    argv: Sequence[str] | None = None,
+) -> FileParserOptions:
+    ...
+```
+
+With `argv=None`, argparse reads the process arguments; an explicit
+sequence supports focused tests and programmatic parsing. The function
+returns a `FileParserOptions` instance, not an argparse namespace, and
+performs no conversion or source/output file I/O.
+
+The proposed conversion callable is:
+
+```python
+def create_output_file(options: FileParserOptions) -> None:
+    ...
 ```
 
 It belongs to
 `lammps_trajectory_analysis_workspaces.file_parser.json_file_parser`.
-It reads both source files, validates the replacement contract, performs
-substitution, and creates the requested output. It does not parse process
-arguments, print diagnostics, or terminate the process.
+It reads paths from the dataclass, reads both source files, validates the
+replacement contract, performs substitution, and creates the requested
+output. It does not mutate the options, parse process arguments, print
+diagnostics, or terminate the process. Programmatic callers construct the
+same dataclass without invoking command-line parsing.
 
 The script imports the `json_file_parser` module from the `file_parser`
-package and delegates to this callable. Follow the existing standalone
-script's source-tree import convention so invocation works outside the
-repository working directory as well.
+package. Its main function calls `parse_command_line_arguments()` and
+passes the returned object to `json_file_parser.create_output_file(options)`
+without unpacking it into separate arguments. Follow the existing
+standalone script's source-tree import convention so invocation works
+outside the repository working directory as well.
 
 ## JSON and Replacement Contract
 
@@ -129,19 +159,63 @@ Example JSON:
 
 ## Implementation Sequence
 
-1. Add the package and callable, implementing JSON validation and independent
-   literal substitution using the standard library.
-2. Add file handling with pre-write validation and exclusive output creation.
-3. Complete the standalone script with required options, module delegation,
-   explicit errors, and a working entry-point guard.
-4. Add focused library and standalone CLI tests.
-5. Document usage in the project README and update workspace status only
-   after implementation is verified.
+Implementation is divided into two stages. Neither stage is authorized by
+this planning-only update.
+
+### Stage 1 - Command-Line Parsing
+
+1. Add the `file_parser` package with the shared `FileParserOptions`
+   dataclass. Implement `parse_command_line_arguments` in the standalone
+   script for the required `--input-file`, `--output-file`, and `--json-file`
+   options, each parsed as `pathlib.Path`, and return the dataclass.
+2. Keep parsing separate from conversion so the returned dataclass can be
+   passed to the module in Stage 2. Use the existing source-tree import
+   convention to import the shared dataclass. Do not read source files,
+   validate JSON, create output, or import the not-yet-implemented
+   conversion module.
+3. Fix the entry-point guard to invoke the main function. Provide standard
+   argparse help, missing-option diagnostics, and unknown-option diagnostics.
+4. Add focused parsing and standalone invocation tests, including invocation
+   outside the repository working directory.
+5. Document the parsing-only milestone and its limitations. A valid
+   invocation completes parsing only; it must not claim a batch file was
+   generated.
+
+Stage 1 is complete when the parsing function returns a `FileParserOptions`
+instance containing all three supplied paths as `Path` values, help works,
+argument errors exit with status 2, and parsing performs no conversion or
+source/output file I/O. The complete public command contract above is
+delivered only after Stage 2.
+
+### Stage 2 - Passing Arguments to the JSON File Module
+
+Depends on Stage 1.
+
+1. Add `json_file_parser.create_output_file(options: FileParserOptions)` to
+   the Stage 1 package using the standard library. Implement the JSON
+   validation, literal substitution, file handling, and error contracts
+   above.
+2. Import the `json_file_parser` module using the existing standalone
+   source-tree import convention. Pass the dataclass returned by
+   `parse_command_line_arguments` directly to `create_output_file`,
+   without unpacking the paths or moving argument parsing into the module.
+3. Translate expected conversion errors into explicit stderr diagnostics
+   and nonzero exit status; successful conversion exits with status 0.
+4. Add library tests and extend the Stage 1 CLI tests with module delegation,
+   successful conversion, and conversion-failure coverage.
+5. Document complete usage in the project README and update workspace
+   status only after implementation is verified.
+
+Stage 2 is complete when the standalone command generates the expected
+output through the module, preserves the file-safety guarantees, reports
+failures explicitly, and passes the library and end-to-end CLI tests.
 
 ## Verification Plan
 
 Library tests must cover:
 
+- Calling the conversion API with a constructed `FileParserOptions`
+  instance, without invoking the script or changing the options.
 - Exact expected Slurm output for a representative template and JSON map.
 - Multiple placeholders on one line, adjacent placeholders, repeated
   placeholders, and placeholders on separate lines.
@@ -158,15 +232,34 @@ Library tests must cover:
 - Removal of incomplete output after a failed write without deleting
   pre-existing files.
 
-CLI tests must cover:
+Stage 1 CLI tests must cover:
 
 - Help, all required options, absent options, and unknown options.
-- Actual standalone script invocation and correct module delegation.
+- The parsing function returns a `FileParserOptions` instance containing
+  the expected `Path` fields, not an argparse namespace.
+- Explicit argument sequences and default process-argument parsing.
+- Relative paths remain relative to the process working directory.
+- Actual standalone script invocation through the entry-point guard.
 - Invocation from a working directory outside the repository.
+- Parsing alone does not read input or JSON files or create output.
+
+Stage 2 retains the Stage 1 parsing coverage, replaces parsing-only
+invocation expectations with conversion expectations, and adds:
+
+- Correct module delegation with the same dataclass object returned by
+  the parsing function, containing all three parsed paths.
 - Successful output content and exit status.
 - Conversion failures with stderr diagnostics and nonzero exit status.
 
-Run the smallest relevant test selection through `uv run`, initially:
+Run the smallest relevant test selection through `uv run`.
+
+For Stage 1:
+
+```text
+uv run python -m pytest tests/command_line/test_create_batch_file.py
+```
+
+For Stage 2:
 
 ```text
 uv run python -m pytest tests/file_parser tests/command_line/test_create_batch_file.py

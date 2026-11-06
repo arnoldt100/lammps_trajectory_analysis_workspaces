@@ -8,14 +8,25 @@ string values from a JSON file.
 This ICM workspace contains planning documents only. Implementation and
 tests are not yet created for this feature.
 
+## Implementation Stages
+
+1. Add the shared options dataclass and implement and test a standalone
+   parsing function that returns it.
+2. Implement the JSON file module and pass the returned dataclass to it,
+   then verify conversion and command-line error handling.
+
+See the [implementation plan](top_level_plan.md) for stage boundaries and
+completion criteria.
+
 ## Structural Boundaries
 
 Planned production files:
 
 - `scripts/create_batch_file.py`: standalone command-line entry point,
-  argument parsing, delegation, and user-facing errors.
+  `parse_command_line_arguments` returning `FileParserOptions`, delegation,
+  and user-facing errors.
 - `src/lammps_trajectory_analysis_workspaces/file_parser/__init__.py`:
-  package boundary.
+  package boundary and shared `FileParserOptions` dataclass.
 - `src/lammps_trajectory_analysis_workspaces/file_parser/json_file_parser.py`:
   JSON validation, template substitution, and output-file creation.
 
