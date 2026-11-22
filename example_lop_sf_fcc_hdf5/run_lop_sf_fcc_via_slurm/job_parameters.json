@@ -1,0 +1,21 @@
+data = {
+  "wall_time": "00:10:00",
+  "jobname": "PC-9-ar_small_box",
+  "jobname_long": "PC-9-0-ar_small_box-solid_liquid-double_precision-79.0K-79.0K",
+  "batch": "batch",
+  "nm_nodes": "1",
+  "nm_tasks": "1",
+  "nm_cpus_per_task": "2",
+  "nm_workers": "2",
+  "nm_frames_to_write": "100",
+  "dcd_filename": "PC-9-0-ar_small_box-solid_liquid-double_precision-79.0K-79.0K.all.dcd",
+  "psf_file": "argon_box_small.psf",
+  "output_hdf5": "ar_box_small.lop_sf_fcc.hdf5",
+  "edge_length": "5.196",
+  "timeunits": "ps",
+  "dt": "1.0",
+  "cutoff": "10.4",
+  "md_params_json": "md_params.json",
+  "md_params_metadata_json": "md_params_metadata.json",
+  "md_metadata_schema_json": "md_metadata.schema.json"
+}

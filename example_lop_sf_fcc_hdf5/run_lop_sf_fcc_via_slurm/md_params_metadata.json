@@ -1,0 +1,30 @@
+{
+  "simulation_metadata": {
+    "software_description": {
+      "extras": [
+        "No extra information"
+      ],
+      "name": "LAMMPS",
+      "version": "stable_some_date"
+    },
+    "build_description": {
+      "extras": [
+        "GPU enabled build with Kokkos HIP backend",
+        "ROCM 6.2.4",
+        "Parallel Enabled"
+      ],
+      "compiling_machine": "Frontier",
+      "programming_environment": [
+        "lmod1",
+        "lmod2",
+        "lmod3"
+      ],
+      "compiler_flags": [
+        "--compiler_flag1",
+        "--compiler_flag2",
+        "--compiler_flag3"
+      ],
+      "build date": "2011-11-04T00:05:23+00:00"
+    }
+  }
+}
